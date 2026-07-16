@@ -274,4 +274,14 @@ public class CEENodeConfigurations {
     public static final NodeConfigurator RAIL_CONTACT_SHOE = new NodeConfigurator.Builder()
             .add(new Vec3(8/16f, 8/16f, 14/16f))
             .simple(Direction.NORTH);
+
+    public static final NodeConfigurator PANTOGRAPH_MANUAL = new NodeConfigurator.Builder()
+            .add(new Vec3(8/16f, 6/16f, 8/16f))
+            .simple(Direction.NORTH);
+
+    public static final NodeConfigurator PANTOGRAPH_MOTORIZED = new NodeConfigurator.Builder()
+            .add(new Vec3(8/16f, 6/16f, 8/16f))
+            .add(new Vec3(2/16f, 6/16f, 8/16f))
+            .add(new Vec3(14/16f, 6/16f, 8/16f))
+            .simple(Direction.NORTH);
 }

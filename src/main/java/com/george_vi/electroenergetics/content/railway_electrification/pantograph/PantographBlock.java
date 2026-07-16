@@ -26,6 +26,7 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -37,15 +38,19 @@ import java.util.Map;
 public class PantographBlock extends SimpleElectricalDeviceBlock<PantographDevice> implements IBE<PantographBlockEntity>, IPantographBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty DOUBLE = BooleanProperty.create("double");
+    public static final EnumProperty<PantographControlMode> CONTROL_MODE = EnumProperty.create("mode", PantographControlMode.class);
 
     public PantographBlock(Properties properties) {
         super(properties);
-        registerDefaultState(defaultBlockState().setValue(DOUBLE, false));
+        registerDefaultState(defaultBlockState()
+                .setValue(DOUBLE, false)
+                .setValue(CONTROL_MODE, PantographControlMode.MANUAL)
+        );
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING, DOUBLE);
+        builder.add(FACING, DOUBLE, CONTROL_MODE);
     }
 
     @Nullable
@@ -158,12 +163,12 @@ public class PantographBlock extends SimpleElectricalDeviceBlock<PantographDevic
 
     @Override
     public Map<Integer, Vec3> getNodePositions(Level level, BlockPos pos, BlockState state) {
-        return Map.of(0, new Vec3(0.5f, 0.375f, 0.5f));
+        return state.getValue(CONTROL_MODE).getNodes().getNodes(state.getValue(FACING).getOpposite());
     }
 
     @Override
     public @Nullable Vec3 getNodePosition(Level level, BlockPos pos, BlockState state, int id) {
-        return new Vec3(0.5f, 0.375f, 0.5f);
+        return state.getValue(CONTROL_MODE).getNodes().getNodePos(state.getValue(FACING).getOpposite(), id);
     }
 
     @Override
