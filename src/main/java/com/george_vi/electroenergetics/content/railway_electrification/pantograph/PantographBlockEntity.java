@@ -160,7 +160,7 @@ public class PantographBlockEntity extends SmartBlockEntity {
                     lo = m1;
             }
             float newExtensionState = (lo + hi) / 2;
-            if (targetExtensionState == currentExtensionState && targetExtensionState != 0)
+            if (targetExtensionState >= currentExtensionState && targetExtensionState != 0)
                 currentExtensionState = newExtensionState;
 
             targetExtensionState = newExtensionState;
