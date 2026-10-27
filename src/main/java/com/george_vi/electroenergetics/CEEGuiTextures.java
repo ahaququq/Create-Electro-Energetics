@@ -8,9 +8,14 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.NotNull;
 
 public enum CEEGuiTextures implements ScreenElement, TextureSheetSegment {
     ELECTRICAL_PANEL_LINK("electrical_panel_link", 72, 109),
+    BIDIRECTIONAL_LINK("bidirectional_link", 110, 109),
+    LINK_RETURN_TO_ORIGINAL("bidirectional_link", 0, 109, 16, 16),
+    TRANSFORMER("transformer", 120, 120),
+    TRANSFORMER_SWAP_SIDES("transformer", 0, 120, 14, 14),
     ENERGY_METER("energy_meter", 232, 120),
     ENERGY_METER_RESET("energy_meter",195, 121, 15, 16),
     ENERGY_METER_OPEN("energy_meter",211, 121, 15, 16),
@@ -68,7 +73,7 @@ public enum CEEGuiTextures implements ScreenElement, TextureSheetSegment {
     }
 
     @Override
-    public ResourceLocation getLocation() {
+    public @NotNull ResourceLocation getLocation() {
         return location;
     }
 }

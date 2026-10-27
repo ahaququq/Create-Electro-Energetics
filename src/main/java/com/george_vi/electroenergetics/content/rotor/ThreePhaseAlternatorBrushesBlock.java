@@ -100,9 +100,9 @@ public class ThreePhaseAlternatorBrushesBlock extends DirectionalKineticElectric
         if (data == null)
             return;
         Direction fastDirection = state.getValue(FACING).getAxis().isVertical() ? Direction.EAST : state.getValue(FACING).getClockWise();
-        data.fast = level.hasSignal(pos.relative(fastDirection), fastDirection.getOpposite());
+        data.fast = level.getSignal(pos.relative(fastDirection), fastDirection.getOpposite());
         Direction slowDirection = state.getValue(FACING).getAxis().isVertical() ? Direction.WEST : state.getValue(FACING).getCounterClockWise();
-        data.slow = level.hasSignal(pos.relative(slowDirection), slowDirection.getOpposite());
+        data.slow = level.getSignal(pos.relative(slowDirection), slowDirection.getOpposite());
     }
 
     @Override

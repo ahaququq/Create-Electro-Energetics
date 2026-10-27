@@ -19,6 +19,16 @@ public class CEENodeConfigurations {
             .add(14, 13, 8)
             .simple();
 
+    public static final NodeConfigurator ELECTRIC_FAN = new NodeConfigurator.Builder()
+            .add(6, 4, 8)
+            .add(10, 4, 8)
+            .simple();
+
+    public static final NodeConfigurator ELECTRIC_FAN_FORWARD = new NodeConfigurator.Builder()
+            .add(6, 10, 8)
+            .add(10, 10, 8)
+            .simple();
+
     public static final NodeConfigurator ALTERNATOR_BRUSHES = new NodeConfigurator.Builder()
             .add(2, 9, 8)
             .add(14, 9, 8)

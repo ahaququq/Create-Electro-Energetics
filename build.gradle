@@ -118,6 +118,9 @@ dependencies {
 //    implementation "curse.maven:create-pantographs-and-wires-1186908:8223808"
 //    implementation "curse.maven:dragonlib-946163:8176502"
 
+    // Strut Your Stuff
+    implementation("maven.modrinth:sHO3MhQx:Nrn7hYca")
+
     runtimeOnly "curse.maven:createaddition-439890:7262496"
     compileOnly "curse.maven:supplementaries-412082:7688722"
     compileOnly "curse.maven:selene-499980:7522321"

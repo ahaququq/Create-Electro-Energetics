@@ -1,5 +1,6 @@
 package com.george_vi.electroenergetics;
 
+import com.george_vi.electroenergetics.compat.strut_your_stuff.StrutYourStuffRegistryEntries;
 import com.george_vi.electroenergetics.config.CEEConfigs;
 import com.george_vi.electroenergetics.content.electric_motor.ElectricMotorBlock;
 import com.george_vi.electroenergetics.content.electrical_panel.ElectricalPanelBlock;
@@ -13,6 +14,7 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -87,6 +89,7 @@ public class CEECreativeTab {
                                     CreativeModeTab.TabVisibility.SEARCH_TAB_ONLY);
 
                         output.accept(CEEBlocks.ELECTRIC_PUMP.asStack());
+                        output.accept(CEEBlocks.ELECTRIC_FAN.asStack());
                         output.accept(CEEBlocks.STATOR.asStack());
                         output.accept(CEEBlocks.ALTERNATOR_ROTOR.asStack());
                         output.accept(CEEBlocks.ALTERNATOR_BRUSHES.asStack());
@@ -96,6 +99,8 @@ public class CEECreativeTab {
                         output.accept(CEEBlocks.CONVERTER.asStack());
                         output.accept(CEEBlocks.RESISTIVE_HEATER.asStack());
                         output.accept(CEEBlocks.CONCRETE_POLE.asStack());
+                        if (ModList.get().isLoaded("struts"))
+                            StrutYourStuffRegistryEntries.fillCreativeTab(output);
                         output.accept(CEEBlocks.INSULATOR.asStack());
                         output.accept(CEEBlocks.POLE_MOUNT.asStack());
                         output.accept(CEEBlocks.CATENARY_HOLDER.asStack());

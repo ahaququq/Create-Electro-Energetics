@@ -46,15 +46,17 @@ public class SynchroscopeBlockEntity extends SmartBlockEntity implements IHaveHo
         counter = Mth.clamp(counter + 1, 0, 20);
         if (counter > 20)
             prevPhaseOffset = phaseOffset;
-//        if (AngleHelper.getShortestAngleDiff(smoothPhase.getValue(), phaseOffset) > 1)
-//            smoothPhase.chase(phaseOffset, 1, LerpedFloat.Chaser.EXP);
         smoothPhase.tickChaser();
 
         if (!level.isClientSide()) {
-            int newRedstoneSignal = ((-Math.round(phaseOffset * (16.0f / 360.0f)) % 16) + 16) % 16;
-            int sidedSignal = (((-Math.round(phaseOffset * (32 / 360.0f)) % 32) + 16) % 32) - 16; // range -16 to 15
-            int newCwSignal = Mth.clamp(sidedSignal, 0, 15);
-            int newCcwRightSignal = Mth.clamp(-sidedSignal - 1, 0, 15);
+            float unwrappedPhase = (phaseOffset + 360) % 360 - 180;
+            if (unwrappedPhase > 0)
+                unwrappedPhase = 180 - unwrappedPhase;
+            else if (unwrappedPhase < 0)
+                unwrappedPhase = -180 - unwrappedPhase;
+            int newRedstoneSignal = ((-Math.round(unwrappedPhase * (16.0f / 360.0f)) % 16) + 16) % 16;
+            int newCwSignal = Mth.clamp(Mth.floor(unwrappedPhase * 15 / 180 + 0.9), 0, 15);
+            int newCcwRightSignal = Mth.clamp(Mth.floor(-unwrappedPhase * 15 / 180 + 0.9), 0, 15);
             if (newRedstoneSignal != redstoneSignal || newCwSignal != ccwRedstoneSignal || newCcwRightSignal != cwRedstoneSignal) {
                 redstoneSignal = newRedstoneSignal;
                 ccwRedstoneSignal = newCwSignal;

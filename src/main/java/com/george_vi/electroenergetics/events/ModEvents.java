@@ -25,6 +25,7 @@ import com.tterrag.registrate.providers.ProviderType;
 import net.createmod.ponder.foundation.PonderIndex;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -39,6 +40,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
@@ -99,6 +101,13 @@ public class ModEvents {
         generator.addProvider(event.includeServer(), new CEECompactingRecipeGen(packOutput, lookupProvider));
         generator.addProvider(event.includeServer(), new CEEMechanicalCraftingRecipeGen(packOutput, lookupProvider));
         generator.addProvider(event.includeServer(), new CEEAdvancements(packOutput, lookupProvider));
+    }
+
+    @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
+    public static void onModelRegistry(ModelEvent.RegisterAdditional event) {
+        // required so that it loads the model for concrete pole struts
+        event.register(ModelResourceLocation.standalone(CreateElectroEnergetics.rl("block/strut/concrete_pole")));
     }
 
     @OnlyIn(Dist.CLIENT)

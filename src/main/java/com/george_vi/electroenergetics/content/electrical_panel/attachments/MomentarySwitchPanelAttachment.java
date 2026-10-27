@@ -4,8 +4,8 @@ import com.george_vi.electroenergetics.CEEPartialModels;
 import com.george_vi.electroenergetics.CEESoundEvents;
 import com.george_vi.electroenergetics.content.cut_off_switch.SwitchingBehaviour;
 import com.george_vi.electroenergetics.content.electrical_panel.ElectricalPanelBlockEntity;
-import com.george_vi.electroenergetics.content.electrical_panel.ElectricalPanelLayoutType;
 import com.george_vi.electroenergetics.content.electrical_panel.link.ElectricalPanelLink;
+import com.george_vi.electroenergetics.content.electrical_panel.link.ElectricalPanelLinkable;
 import com.george_vi.electroenergetics.content.wire_spool.EmptySpoolItem;
 import com.george_vi.electroenergetics.content.wire_spool.WireSpoolItem;
 import com.george_vi.electroenergetics.simulation.BridgeCollector;
@@ -14,7 +14,6 @@ import com.george_vi.electroenergetics.simulation.electrical_properties.Electric
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
-import com.simibubi.create.Create;
 import net.createmod.catnip.render.CachedBuffers;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -92,7 +91,7 @@ public class MomentarySwitchPanelAttachment extends PanelAttachment implements E
         if (this.closedTicks == 0) {
             CEESoundEvents.playOnServer(level, pos, CEESoundEvents.CONTACT_OPEN.get(), 1, 1);
             sendData();
-            updateLinkState();
+            updateLinkState(0, 0);
         }
         this.closedTicks = Math.max(-1, this.closedTicks - 1);
     }
@@ -106,10 +105,7 @@ public class MomentarySwitchPanelAttachment extends PanelAttachment implements E
 
         if (AllBlocks.REDSTONE_LINK.isIn(stack)) {
             if (!level.isClientSide && player instanceof ServerPlayer && player.mayBuild())
-                player.openMenu(this, buf -> {
-                    for (int i = 0; i < 2; i++)
-                        ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, getLinkFrequencies()[i]);
-                });
+                player.openMenu(this, this::writeForConfiguration);
             return ItemInteractionResult.SUCCESS;
         }
 
@@ -125,26 +121,10 @@ public class MomentarySwitchPanelAttachment extends PanelAttachment implements E
             if (closedTicks == -1)
                 CEESoundEvents.playOnServer(level, pos, CEESoundEvents.CONTACT_CLOSE.get(), 1f, 1f);
             closedTicks = 4;
-            updateLinkState();
+            updateLinkState(0, 15);
             sendData();
         }
         return swing ? ItemInteractionResult.SUCCESS : ItemInteractionResult.CONSUME;
-    }
-
-
-    @Override
-    public void initialize() {
-        updateLinkState();
-    }
-
-    @Override
-    public int getTransmittedStrength() {
-        return closedTicks > 0 && isAlive() ? 15 : 0;
-    }
-
-    @Override
-    public BlockPos getLocation() {
-        return pos;
     }
 
     @Override
@@ -153,22 +133,15 @@ public class MomentarySwitchPanelAttachment extends PanelAttachment implements E
     }
 
     @Override
+    public BlockPos getLocation() {
+        return pos;
+    }
+
+    @Override
     public void onRemoved(Player player) {
         super.onRemoved(player);
         if (!level.isClientSide)
-            Create.REDSTONE_LINK_NETWORK_HANDLER.removeFromNetwork(getLevel(), this);
-    }
-
-    @Override
-    public void updateLinkState() {
-        ElectricalPanelLink.super.updateLinkState();
-        sendData();
-    }
-
-    @Override
-    public void removeLinkState() {
-        ElectricalPanelLink.super.removeLinkState();
-        sendData();
+            removeLinkState(-1);
     }
 
     @Override
@@ -201,4 +174,12 @@ public class MomentarySwitchPanelAttachment extends PanelAttachment implements E
     public ItemStack[] getLinkFrequencies() {
         return linkFrequencies;
     }
+
+    ElectricalPanelLinkable[] linkables = new ElectricalPanelLinkable[] {new ElectricalPanelLinkable(this)};
+
+    @Override
+    public ElectricalPanelLinkable[] getLinkables() {
+        return linkables;
+    }
+
 }

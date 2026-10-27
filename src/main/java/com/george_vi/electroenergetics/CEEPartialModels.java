@@ -53,6 +53,7 @@ public class CEEPartialModels {
     public static final PartialModel BULB_FILAMENT_BRIGHT = PartialModel.of(CreateElectroEnergetics.rl("block/bulb/filament_bright"));
     public static final PartialModel BULB_BROKEN_FILAMENT = PartialModel.of(CreateElectroEnergetics.rl("block/bulb/filament_broken"));
     public static final PartialModel BULB_GLASS = PartialModel.of(CreateElectroEnergetics.rl("block/bulb/glass"));
+    public static final PartialModel ELECTRIC_FAN_BLADE = PartialModel.of(CreateElectroEnergetics.rl("block/electric_fan/fan"));
     public static final PartialModel RESISTOR_STRIP = PartialModel.of(CreateElectroEnergetics.rl("block/electronics/resistor_strip"));
     public static final PartialModel FUSE_HOLDER_COPPER_CONDUCTOR = PartialModel.of(CreateElectroEnergetics.rl("block/fuse_holder/copper_conductor"));
     public static final PartialModel FUSE_HOLDER_FUSE = PartialModel.of(CreateElectroEnergetics.rl("block/fuse_holder/fuse"));
@@ -120,8 +121,14 @@ public class CEEPartialModels {
     public static final PartialModel PANEL_ATTACHMENT_ANALOG_LEVER_THROTTLE_HEAD_DYEABLE = PartialModel.of(CreateElectroEnergetics.rl("block/electrical_panel/attachments/analog_lever_throttle_head_dyeable"));
     public static final PartialModel PANEL_ATTACHMENT_ANALOG_LEVER_METAL_THINGY = PartialModel.of(CreateElectroEnergetics.rl("block/electrical_panel/attachments/analog_lever_metal_thingy"));
 
+    public static final PartialModel PANEL_ATTACHMENT_FAN_BODY = PartialModel.of(CreateElectroEnergetics.rl("block/electrical_panel/attachments/fan"));
+    public static final PartialModel PANEL_ATTACHMENT_FAN_CONNECTORS = PartialModel.of(CreateElectroEnergetics.rl("block/electrical_panel/attachments/fan_connectors"));
+
     public static final PartialModel PANEL_ATTACHMENT_VELOCITY_SENSOR = PartialModel.of(CreateElectroEnergetics.rl("block/electrical_panel/attachments/velocity_sensor"));
     public static final PartialModel PANEL_ATTACHMENT_VELOCITY_SENSOR_WIDE = PartialModel.of(CreateElectroEnergetics.rl("block/electrical_panel/attachments/velocity_sensor_wide"));
+
+    public static final PartialModel PANEL_ATTACHMENT_SMOL_TRANSFORMER = PartialModel.of(CreateElectroEnergetics.rl("block/electrical_panel/attachments/transformer"));
+    public static final PartialModel PANEL_ATTACHMENT_SMOL_TRANSFORMER_BLOWN = PartialModel.of(CreateElectroEnergetics.rl("block/electrical_panel/attachments/transformer_blown"));
 
     public static final PartialModel PANEL_ATTACHMENT_CUT_OFF_SWITCH = PartialModel.of(CreateElectroEnergetics.rl("block/electrical_panel/attachments/cut_off_switch"));
     public static final PartialModel PANEL_ATTACHMENT_TINY_SWITCH = PartialModel.of(CreateElectroEnergetics.rl("block/electrical_panel/attachments/tiny_switch"));

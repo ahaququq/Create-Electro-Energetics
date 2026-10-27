@@ -89,7 +89,7 @@ public class SimulationResults {
             int id2 = nodeId2 * microTicks;
             double rms = 0;
             for (int j = 0; j < microTicks; j++)
-                rms += (voltages[id1+j] - voltages[id2+j]) / properties.resistance() + properties.currentSource();
+                rms += (voltages[id1+j] - voltages[id2+j]) / properties.resistance() - properties.currentSource();
             rms /= microTicks;
             return rms;
         }
@@ -223,10 +223,8 @@ public class SimulationResults {
      */
     public int getNodeID(Node node, int hint) {
         List<SimulationNode> allIndexedNodes = circuitBuilder.allIndexedNodes;
-        if (hint >= 0 && hint < allIndexedNodes.size()) {
-            SimulationNode wn = allIndexedNodes.get(hint);
+        if (hint >= 0 && hint < allIndexedNodes.size())
             return hint;
-        }
         return circuitBuilder.nodeIndexes.getInt(node);
     }
 }

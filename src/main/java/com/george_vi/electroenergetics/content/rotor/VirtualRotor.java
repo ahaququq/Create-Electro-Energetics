@@ -1,5 +1,7 @@
 package com.george_vi.electroenergetics.content.rotor;
 
+import com.george_vi.electroenergetics.config.CEEConfigs;
+
 /**
  * This is used because Create's stress networks don't like being udpated tick-to-tick
  */
@@ -29,9 +31,9 @@ public class VirtualRotor {
     void swing() {
         double inertia = 30000;
         double damping = 0.1;
-        double nominalOmega = 360 * (rpm * (40.0 / 256.0)) / 20 / totalMicroTicks;
+        double nominalOmega = 360 * (rpm / CEEConfigs.server().rotorValues.hertzPerRPM.get()) / 20 / totalMicroTicks;
 
-        double netEnergy = torqueAccumulated - (stress / 20.0);
+        double netEnergy = torqueAccumulated;
 
         angleError += netEnergy / inertia;
         angleError *= (1.0 - damping);

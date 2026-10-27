@@ -4,6 +4,7 @@ import com.george_vi.electroenergetics.CEERegistries;
 import com.george_vi.electroenergetics.content.electrical_panel.attachments.PanelAttachment;
 import com.george_vi.electroenergetics.content.electrical_panel.attachments.PanelAttachmentType;
 import com.george_vi.electroenergetics.devices.device.DevicesSavedData;
+import com.george_vi.electroenergetics.foundation.device.ElectricalDeviceBlock;
 import com.george_vi.electroenergetics.foundation.nodes.InWorldNode;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
@@ -190,6 +191,8 @@ public class ElectricalPanelBlockEntity extends SmartBlockEntity implements IHav
 
     public void attachmentUpdate() {
         sendData();
+        if (level instanceof ServerLevel sl)
+            ((ElectricalDeviceBlock<?>)getBlockState().getBlock()).ensureNodesExist(sl, getBlockPos(), getBlockState());
     }
 
     public PanelAttachment[] getAttachments() {

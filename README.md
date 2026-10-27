@@ -1,6 +1,10 @@
 <div align="center">
 <img width="256" height="256" alt="rsz_cee-icon" src="https://github.com/user-attachments/assets/270cddf1-07b0-40b7-9ad0-d918386c4bdd" />
 <h1>Create: Electro Energetics</h1>
+<a href="https://modrinth.com/mod/create-electro-energetics"><img src="https://img.shields.io/modrinth/dt/create-electro-energetics?logo=modrinth&label=&suffix=%20&style=flat&color=242629&labelColor=1bd96a&logoColor=1c1c1c"></a>
+<a href="https://www.curseforge.com/minecraft/mc-mods/create-electro-energetics"><img src="https://img.shields.io/curseforge/dt/1443327?logo=curseforge&label=&suffix=%20&style=flat&color=242629&labelColor=e04e14&logoColor=1c1c1c"></a>
+<a href="https://discord.gg/pUgaSXcGEQ"><img src="https://img.shields.io/discord/1121792423836799128?logo=discord&label=&suffix=%20&style=flat&color=242629&labelColor=5865f2&logoColor=1c1c1c"></a><br>
+  
 </div>
 
 <h3>Overview:</h3>

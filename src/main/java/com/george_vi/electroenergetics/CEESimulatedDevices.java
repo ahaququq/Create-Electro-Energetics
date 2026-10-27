@@ -12,6 +12,7 @@ import com.george_vi.electroenergetics.content.converter.ConverterDevice;
 import com.george_vi.electroenergetics.content.creative_battery.CreativeBatteryDevice;
 import com.george_vi.electroenergetics.content.cut_off_switch.CutOffSwitchDevice;
 import com.george_vi.electroenergetics.content.cut_off_switch.MomentarySwitchDevice;
+import com.george_vi.electroenergetics.content.electric_fan.ElectricFanDevice;
 import com.george_vi.electroenergetics.content.electric_motor.ElectricMotorDevice;
 import com.george_vi.electroenergetics.content.electric_pump.ElectricPumpDevice;
 import com.george_vi.electroenergetics.content.electrical_panel.ElectricalPanelDevice;
@@ -252,6 +253,9 @@ public class CEESimulatedDevices {
 
     public static final DeferredHolder<SimulatedDeviceType<?>, SimulatedDeviceType<VariacDevice>> VARIAC = register("variac",
             ((type, level, pos, sd) -> new VariacDevice(level, pos, sd, type)));
+
+    public static final DeferredHolder<SimulatedDeviceType<?>, SimulatedDeviceType<ElectricFanDevice>> ELECTRIC_FAN = register("electric_fan",
+            ((type, level, pos, sd) -> new ElectricFanDevice(level, pos, sd, type)));
 
     private static <T extends SimulatedDevice> DeferredHolder<SimulatedDeviceType<?>, SimulatedDeviceType<T>> register(String name, SimulatedDeviceFactory<T> factory) {
         return DEVICES.register(name, () -> new SimulatedDeviceType<>(CreateElectroEnergetics.rl(name), factory));

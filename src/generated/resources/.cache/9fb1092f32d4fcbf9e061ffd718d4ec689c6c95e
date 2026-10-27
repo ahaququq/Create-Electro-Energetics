@@ -1,4 +1,4 @@
-// 1.21.1	2026-06-23T18:53:42.180434258	Recipes
+// 1.21.1	2026-07-21T21:51:27.930497394	Recipes
 e4558ff2c12de196a56a9f67ffe27050cdfe38f7 data/electroenergetics/advancement/recipes/decorations/stonecutting/electric_shock_sign.json
 1e443110466e17eb3a8f102e9fc77c86fc29380e data/electroenergetics/advancement/recipes/decorations/stonecutting/grounding_sign.json
 e89fe60463584c2f2421e5f0b94ad49c5b1927a5 data/electroenergetics/advancement/recipes/decorations/stonecutting/high_voltage_sign.json
@@ -39,6 +39,7 @@ da637b268d2ea4b42da1ce3fa69f0eb14c49c710 data/electroenergetics/advancement/reci
 15151f811aa2ddfe933447cb1306932496cab01f data/electroenergetics/advancement/recipes/misc/crafting/diode.json
 2288546a13f6c8783affa065c1768d000855d146 data/electroenergetics/advancement/recipes/misc/crafting/double_connector.json
 3fb30b7a29ad541e48a1f14caeedb366d964052f data/electroenergetics/advancement/recipes/misc/crafting/double_switch.json
+6465052d95ad8f35a45b53051710ebf0e54795d0 data/electroenergetics/advancement/recipes/misc/crafting/electric_fan.json
 9c262d352b15250e5c9988db81e107253319d034 data/electroenergetics/advancement/recipes/misc/crafting/electric_pump.json
 238aead58fd2d4270b624e7d4a94d050f4d9920c data/electroenergetics/advancement/recipes/misc/crafting/electrical_panel.json
 2d7ccfacc6a3d0b0e4f0c8cf719db8a11e27e792 data/electroenergetics/advancement/recipes/misc/crafting/electrical_panel_undye.json
@@ -163,6 +164,7 @@ e3dfcefff96067cc8c5e8d84070d7225fc7b7420 data/electroenergetics/recipe/crafting/
 0a4e64e63d83fc3057f68a6dda575df02ac300ee data/electroenergetics/recipe/crafting/diode.json
 6480af37c8df9d4fe6732860b296da6aac59367c data/electroenergetics/recipe/crafting/double_connector.json
 2f3b289f9fdf48379f586ae58aff8150d020ce50 data/electroenergetics/recipe/crafting/double_switch.json
+aa0a5458b204ec093aad5d15cf041568a80d8dfd data/electroenergetics/recipe/crafting/electric_fan.json
 3c9e4e6da725fe2429e6b2866551105a01b879dd data/electroenergetics/recipe/crafting/electric_pump.json
 c2bd43d4959040c8c25f214119fd9ba65f84f440 data/electroenergetics/recipe/crafting/electrical_panel.json
 9899b30a1fea73c32da8fd85475563eeafaea326 data/electroenergetics/recipe/crafting/electrical_panel_undye.json

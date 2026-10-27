@@ -1,22 +1,21 @@
 package com.george_vi.electroenergetics.content.electrical_panel.link;
 
 import com.george_vi.electroenergetics.CEEGuiTextures;
+import com.george_vi.electroenergetics.content.electrical_panel.special_interaction.SetMenuPanelAttachmentOptionsPacket;
 import com.george_vi.electroenergetics.foundation.CEELang;
 import com.simibubi.create.foundation.gui.AllIcons;
-import com.simibubi.create.foundation.gui.menu.AbstractSimiContainerScreen;
 import com.simibubi.create.foundation.gui.widget.IconButton;
-import net.minecraft.ChatFormatting;
+import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-
-import java.util.LinkedList;
-import java.util.List;
+import org.jetbrains.annotations.NotNull;
 
 import static com.simibubi.create.foundation.gui.AllGuiTextures.PLAYER_INVENTORY;
 
-public class ElectricalPanelLinkScreen extends AbstractSimiContainerScreen<ElectricalPanelLinkMenu> {
+public class ElectricalPanelLinkScreen extends AbstractLinkScreen<ElectricalPanelLinkMenu> {
     private final CEEGuiTextures background = CEEGuiTextures.ELECTRICAL_PANEL_LINK;
+    private IconButton shouldReturn;
 
     public ElectricalPanelLinkScreen(ElectricalPanelLinkMenu container, Inventory inv, Component title) {
         super(container, inv, title);
@@ -39,11 +38,21 @@ public class ElectricalPanelLinkScreen extends AbstractSimiContainerScreen<Elect
 
         addRenderableWidget(confirmButton);
 
-//        extraAreas = ImmutableList.of(new Rect2i(x + background.getWidth() + 4, y + background.getHeight() - 44, 64, 56));
+        shouldReturn = new IconButton(x + 7, y + background.getHeight() - 24, CEEGuiTextures.LINK_RETURN_TO_ORIGINAL);
+        shouldReturn.withCallback(() -> {
+            shouldReturn.green ^= true;
+            CatnipServices.NETWORK.sendToServer(
+                    new SetMenuPanelAttachmentOptionsPacket(SetMenuPanelAttachmentOptionsPacket.RETURN_TO_ORIGINAL, shouldReturn.green));
+
+        });
+        shouldReturn.green = menu.contentHolder.getReturnToZero();
+        shouldReturn.setToolTip(CEELang.translateDirect("electrical_panel_linking.return_to_zero"));
+        if (menu.contentHolder.hasReturnToZeroOption())
+            addRenderableWidget(shouldReturn);
     }
 
     @Override
-    protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+    protected void renderBg(@NotNull GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         int invX = getLeftOfCentered(PLAYER_INVENTORY.getWidth());
         int invY = topPos + background.getHeight() + 4;
         renderPlayerInventory(graphics, invX, invY);
@@ -56,26 +65,7 @@ public class ElectricalPanelLinkScreen extends AbstractSimiContainerScreen<Elect
     }
 
     @Override
-    protected void renderTooltip(GuiGraphics graphics, int x, int y) {
-        if (!menu.getCarried()
-                .isEmpty() || this.hoveredSlot == null || hoveredSlot.container == menu.playerInventory) {
-            super.renderTooltip(graphics, x, y);
-            return;
-        }
-
-        List<Component> list = new LinkedList<>();
-        if (hoveredSlot.hasItem())
-            list = getTooltipFromContainerItem(hoveredSlot.getItem());
-
-        graphics.renderComponentTooltip(font, addToTooltip(list, hoveredSlot.getSlotIndex()), x, y);
+    public int slots() {
+        return 2;
     }
-
-
-    private List<Component> addToTooltip(List<Component> list, int slot) {
-        if (slot == 0 || slot == 1)
-            list.add(CEELang.translateDirect("electrical_panel_linking.frequency_slot_" + slot)
-                    .withStyle(ChatFormatting.GOLD));
-        return list;
-    }
-
 }

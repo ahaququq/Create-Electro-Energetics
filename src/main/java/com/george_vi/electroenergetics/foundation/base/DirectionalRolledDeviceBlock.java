@@ -6,6 +6,7 @@ import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.tterrag.registrate.providers.DataGenContext;
 import com.tterrag.registrate.providers.RegistrateBlockstateProvider;
+import com.tterrag.registrate.util.nullness.NonNullBiConsumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
@@ -87,6 +88,19 @@ public abstract class DirectionalRolledDeviceBlock<T extends SimulatedDevice> ex
                         .rotationX(state.getValue(FACING) == Direction.DOWN ? 180 : state.getValue(FACING).getAxis().isHorizontal() ? 270 : 0)
                         .rotationY(state.getValue(FACING).getAxis().isHorizontal() ? (int) state.getValue(FACING).toYRot() : 0)
                         .build()));
+    }
+
+    public static <T extends Block> void generateBlockStateWithSuffix(DataGenContext<Block, T> c, RegistrateBlockstateProvider p, Function<BlockState, String> suffixFunc) {
+        p.getVariantBuilder(c.getEntry()).forAllStates((state ->
+                ConfiguredModel.builder()
+                        .modelFile(!state.getValue(ROLL) ?  AssetLookup.partialBaseModel(c, p, suffixFunc.apply(state)) :  AssetLookup.partialBaseModel(c, p, suffixFunc.apply(state), "roll"))
+                        .rotationX(state.getValue(FACING) == Direction.DOWN ? 180 : state.getValue(FACING).getAxis().isHorizontal() ? 270 : 0)
+                        .rotationY(state.getValue(FACING).getAxis().isHorizontal() ? (int) state.getValue(FACING).toYRot() : 0)
+                        .build()));
+    }
+
+    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> generateBlockStateWithSuffix(Function<BlockState, String> suffixFunc) {
+        return (c, p) -> generateBlockStateWithSuffix(c, p, suffixFunc);
     }
 
     public static <T extends Block> void generateBlockState(DataGenContext<Block, T> c, RegistrateBlockstateProvider p) {

@@ -7,6 +7,7 @@
     "electroenergetics:ammeter",
     "electroenergetics:voltmeter",
     "electroenergetics:electric_pump",
+    "electroenergetics:electric_fan",
     "electroenergetics:transformer",
     "electroenergetics:transformer_core",
     "electroenergetics:voltage_regulator",

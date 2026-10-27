@@ -23,8 +23,8 @@ public class ElectricMotorDevice extends SimpleElectricalDevice {
     @Override
     public void preTick(BridgeCollector bridges) {
         if (this.be == null && level.isLoaded(pos))
-            if (level.getBlockEntity(pos) instanceof ElectricMotorBlockEntity be)
-                this.be = be;
+            if (level.getBlockEntity(pos) instanceof ElectricMotorBlockEntity b)
+                this.be = b;
 
         if (this.be != null) {
             if (this.be.isRemoved())
@@ -43,8 +43,8 @@ public class ElectricMotorDevice extends SimpleElectricalDevice {
     @Override
     public void postTick(SimulationResults results) {
         if (this.be == null && level.isLoaded(pos))
-            if (level.getBlockEntity(pos) instanceof ElectricMotorBlockEntity be)
-                this.be = be;
+            if (level.getBlockEntity(pos) instanceof ElectricMotorBlockEntity b)
+                this.be = b;
 
         if (this.be != null) {
             if (this.be.isRemoved())

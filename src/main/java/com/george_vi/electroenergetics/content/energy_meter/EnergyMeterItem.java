@@ -31,7 +31,7 @@ public class EnergyMeterItem extends BlockItem {
         if (energy != null && owner != null) {
             BlockEntity blockentity = level.getBlockEntity(pos);
             if (blockentity instanceof EnergyMeterBlockEntity be) {
-                be.owner = owner;
+                be.setOwner(owner);
                 be.totalEnergy = energy.floatValue();
                 updated = true;
             }

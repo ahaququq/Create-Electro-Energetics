@@ -2,136 +2,141 @@ package com.george_vi.electroenergetics.content.electrical_panel;
 
 import com.george_vi.electroenergetics.content.electrical_panel.attachments.PanelAttachment;
 import com.george_vi.electroenergetics.foundation.nodes.InWorldNode;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public enum PanelAttachmentMode {
-    FULL_NONE(0, new ElectricalPanelSlot[] {ElectricalPanelSlot.FULL_SLOT}),
-    FULL_SINGLE(2, new ElectricalPanelSlot[] {ElectricalPanelSlot.FULL_SLOT}),
-    FULL_DOUBLE(4, new ElectricalPanelSlot[] {ElectricalPanelSlot.FULL_SLOT}),
-    FULL_TRIPLE(6, new ElectricalPanelSlot[] {ElectricalPanelSlot.FULL_SLOT}),
-    FULL_QUAD(8, new ElectricalPanelSlot[] {ElectricalPanelSlot.FULL_SLOT}),
-    QUARTER_NONE(0, new ElectricalPanelSlot[] {
-            ElectricalPanelSlot.QUARTER_CENTER,
-            ElectricalPanelSlot.QUARTER_LEFT_LOWER,
-            ElectricalPanelSlot.QUARTER_LEFT_UPPER,
-            ElectricalPanelSlot.QUARTER_RIGHT_LOWER,
-            ElectricalPanelSlot.QUARTER_RIGHT_UPPER
-    }),
-    HALF_NONE(0, new ElectricalPanelSlot[] {
-            ElectricalPanelSlot.HALF_UPPER,
-            ElectricalPanelSlot.HALF_LEFT,
-            ElectricalPanelSlot.HALF_LOWER,
-            ElectricalPanelSlot.HALF_RIGHT
-    }),
-    HALF(2, new ElectricalPanelSlot[] {
-            ElectricalPanelSlot.HALF_UPPER,
-            ElectricalPanelSlot.HALF_LEFT,
-            ElectricalPanelSlot.HALF_LOWER,
-            ElectricalPanelSlot.HALF_RIGHT
-    }),
-    FULL_OR_HALF_NONE(0, new ElectricalPanelSlot[] {
-            ElectricalPanelSlot.FULL_SLOT,
-            ElectricalPanelSlot.HALF_UPPER,
-            ElectricalPanelSlot.HALF_LEFT,
-            ElectricalPanelSlot.HALF_LOWER,
-            ElectricalPanelSlot.HALF_RIGHT
-    }),
-    FULL_OR_HALF(2, new ElectricalPanelSlot[] {
-            ElectricalPanelSlot.FULL_SLOT,
-            ElectricalPanelSlot.HALF_UPPER,
-            ElectricalPanelSlot.HALF_LEFT,
-            ElectricalPanelSlot.HALF_LOWER,
-            ElectricalPanelSlot.HALF_RIGHT
-    }),
-    HALF_OR_THIRD(2, new ElectricalPanelSlot[] {
-            ElectricalPanelSlot.HALF_UPPER,
-            ElectricalPanelSlot.HALF_LEFT,
-            ElectricalPanelSlot.HALF_LOWER,
-            ElectricalPanelSlot.HALF_RIGHT,
-            ElectricalPanelSlot.THIRD_RIGHT,
-            ElectricalPanelSlot.THIRD_CENTERED,
-            ElectricalPanelSlot.THIRD_LEFT
-    }),
-    HALF_OR_THIRD_NONE(2, new ElectricalPanelSlot[] {
-            ElectricalPanelSlot.HALF_UPPER,
-            ElectricalPanelSlot.HALF_LEFT,
-            ElectricalPanelSlot.HALF_LOWER,
-            ElectricalPanelSlot.HALF_RIGHT,
-            ElectricalPanelSlot.THIRD_RIGHT,
-            ElectricalPanelSlot.THIRD_CENTERED,
-            ElectricalPanelSlot.THIRD_LEFT
-    }),
-    HALF_OR_THIRD_OR_SMOL_NONE(0, new ElectricalPanelSlot[] {
-            ElectricalPanelSlot.HALF_UPPER,
-            ElectricalPanelSlot.HALF_LEFT,
-            ElectricalPanelSlot.HALF_LOWER,
-            ElectricalPanelSlot.HALF_RIGHT,
-            ElectricalPanelSlot.THIRD_RIGHT,
-            ElectricalPanelSlot.THIRD_CENTERED,
-            ElectricalPanelSlot.THIRD_LEFT,
+import java.util.HashMap;
+import java.util.Map;
 
-            ElectricalPanelSlot.THIRD_RIGHT_TOP,
-            ElectricalPanelSlot.THIRD_CENTERED_TOP,
-            ElectricalPanelSlot.THIRD_LEFT_TOP,
-            ElectricalPanelSlot.THIRD_RIGHT_BOTTOM,
-            ElectricalPanelSlot.THIRD_CENTERED_BOTTOM,
-            ElectricalPanelSlot.THIRD_LEFT_BOTTOM
-    }),
-    HALF_OR_THIRD_OR_SMOL(2, new ElectricalPanelSlot[] {
-            ElectricalPanelSlot.HALF_UPPER,
-            ElectricalPanelSlot.HALF_LEFT,
-            ElectricalPanelSlot.HALF_LOWER,
-            ElectricalPanelSlot.HALF_RIGHT,
-            ElectricalPanelSlot.THIRD_RIGHT,
-            ElectricalPanelSlot.THIRD_CENTERED,
-            ElectricalPanelSlot.THIRD_LEFT,
+import static com.george_vi.electroenergetics.content.electrical_panel.ElectricalPanelSlot.*;
 
-            ElectricalPanelSlot.THIRD_RIGHT_TOP,
-            ElectricalPanelSlot.THIRD_CENTERED_TOP,
-            ElectricalPanelSlot.THIRD_LEFT_TOP,
-            ElectricalPanelSlot.THIRD_RIGHT_BOTTOM,
-            ElectricalPanelSlot.THIRD_CENTERED_BOTTOM,
-            ElectricalPanelSlot.THIRD_LEFT_BOTTOM
-    }),
-    HALF_ONLY_HORIZONTAL(2, new ElectricalPanelSlot[] {
-            ElectricalPanelSlot.HALF_UPPER,
-            ElectricalPanelSlot.HALF_LOWER,
-    }),
-    HALF_ONLY_VERTICAL(2, new ElectricalPanelSlot[] {
-            ElectricalPanelSlot.HALF_LEFT,
-            ElectricalPanelSlot.HALF_RIGHT
-    }),
-    THIRD(2, new ElectricalPanelSlot[] {
-            ElectricalPanelSlot.THIRD_RIGHT,
-            ElectricalPanelSlot.THIRD_CENTERED,
-            ElectricalPanelSlot.THIRD_LEFT
-    }),
-    ;
+public interface PanelAttachmentMode {
+    PanelAttachmentMode FULL_NONE = builder().addSlot(FULL_SLOT).build();
 
-    public final int nodes;
-    public final ElectricalPanelSlot[] possibleSlots;
+    PanelAttachmentMode FULL_SINGLE = builder()
+            .addSlot(FULL_SLOT).node(3, 16).build();
 
-    PanelAttachmentMode(int nodes, ElectricalPanelSlot[] possibleSlots) {
-        this.nodes = nodes;
-        this.possibleSlots = possibleSlots;
+    PanelAttachmentMode FULL_DOUBLE = builder()
+            .addSlot(FULL_SLOT)
+                .node(1, 5)
+                .node(14, 18).build();
+
+    PanelAttachmentMode FULL_TRIPLE = builder()
+            .addSlot(FULL_SLOT)
+                .node(1, 3, 5)
+                .node(14, 16, 18).build();
+
+    PanelAttachmentMode FULL_QUAD = builder()
+            .addSlot(FULL_SLOT)
+                .node(0, 2, 4, 6)
+                .node(13, 15, 17, 19).build();
+
+    PanelAttachmentMode QUARTER_NONE = builder()
+            .addSlot(QUARTER_CENTER).addSlot(QUARTER_LEFT_LOWER).addSlot(QUARTER_LEFT_UPPER)
+            .addSlot(QUARTER_RIGHT_LOWER).addSlot(QUARTER_RIGHT_UPPER)
+            .build();
+
+    PanelAttachmentMode HALF_NONE = builder()
+            .addSlot(HALF_LEFT).addSlot(HALF_UPPER)
+            .addSlot(HALF_RIGHT).addSlot(HALF_LOWER)
+            .build();
+
+    PanelAttachmentMode HALF_VERTICAL = builder()
+            .addSlot(HALF_RIGHT).node(20, 22)
+            .addSlot(HALF_LEFT).node(21, 23).build();
+
+    PanelAttachmentMode HALF_HORIZONTAL = builder()
+            .addSlot(HALF_LOWER).node(22, 23)
+            .addSlot(HALF_UPPER).node(20, 21).build();
+
+    PanelAttachmentMode HALF = union(HALF_HORIZONTAL, HALF_VERTICAL);
+
+    PanelAttachmentMode THIRD = builder()
+            .addSlot(THIRD_RIGHT).node(7, 10)
+            .addSlot(THIRD_CENTERED).node(8, 11)
+            .addSlot(THIRD_LEFT).node(9, 12).build();
+
+    PanelAttachmentMode THIRD_NONE = builder()
+            .addSlot(THIRD_RIGHT)
+            .addSlot(THIRD_CENTERED)
+            .addSlot(THIRD_LEFT).build();
+
+    PanelAttachmentMode HALF_OR_THIRD = union(HALF, THIRD);
+
+    PanelAttachmentMode HALF_OR_THIRD_NONE = union(HALF_NONE, THIRD_NONE);
+
+    PanelAttachmentMode SIXTH = builder()
+            .addSlot(THIRD_RIGHT_BOTTOM).node(131, 31)
+            .addSlot(THIRD_CENTERED_BOTTOM).node(135, 35)
+            .addSlot(THIRD_LEFT_BOTTOM).node(139, 39)
+            .addSlot(THIRD_RIGHT_TOP).node(291, 191)
+            .addSlot(THIRD_CENTERED_TOP).node(295, 195)
+            .addSlot(THIRD_LEFT_TOP).node(299, 199).build();
+
+    PanelAttachmentMode SIXTH_NONE = builder()
+            .addSlot(THIRD_RIGHT_BOTTOM)
+            .addSlot(THIRD_CENTERED_BOTTOM)
+            .addSlot(THIRD_LEFT_BOTTOM)
+            .addSlot(THIRD_RIGHT_TOP)
+            .addSlot(THIRD_CENTERED_TOP)
+            .addSlot(THIRD_LEFT_TOP).build();
+
+    PanelAttachmentMode HALF_OR_THIRD_OR_SIXTH = union(HALF_OR_THIRD, SIXTH);
+
+    PanelAttachmentMode HALF_OR_THIRD_OR_SIXTH_NONE = union(HALF_OR_THIRD_NONE, SIXTH_NONE);
+
+    PanelAttachmentMode SIXTH_QUAD = builder()
+            .addSlot(THIRD_RIGHT_BOTTOM).node(130, 30, 132, 32)
+            .addSlot(THIRD_CENTERED_BOTTOM).node(134, 34, 136, 36)
+            .addSlot(THIRD_LEFT_BOTTOM).node(138, 38, 140, 40)
+            .addSlot(THIRD_RIGHT_TOP).node(290, 190, 292, 192)
+            .addSlot(THIRD_CENTERED_TOP).node(294, 194, 296, 196)
+            .addSlot(THIRD_LEFT_TOP).node(298, 198, 300, 200).build();
+
+
+    static PanelAttachmentMode union(PanelAttachmentMode m1, PanelAttachmentMode m2) {
+        Map<ElectricalPanelSlot, IntList> slots = new HashMap<>(m1.possibleSlots());
+        slots.putAll(m2.possibleSlots());
+        return new Normal(slots);
+    }
+
+    private static @NotNull Builder builder() {
+        return new Builder();
+    }
+
+
+    Map<ElectricalPanelSlot, IntList> possibleSlots();
+
+    default InWorldNode[] getNodesFor(BlockPos pos, ElectricalPanelSlot slot) {
+        IntList nodes = possibleSlots().get(slot);
+        if (nodes == null)
+            return new InWorldNode[0];
+
+        InWorldNode[] out = new InWorldNode[nodes.size()];
+        for (int i = 0; i < nodes.size(); i++)
+            out[i] = new InWorldNode(nodes.getInt(i), pos);
+
+        return out;
     }
 
     @Nullable
-    public ElectricalPanelSlot getSlot(Direction facing, Vec3 clickPosition, PanelAttachment[] existingAttachments) {
+    default ElectricalPanelSlot getSlot(Direction facing, Vec3 clickPosition, PanelAttachment[] existingAttachments) {
         Vec3 rotatedClickPos = VecHelper.rotateCentered(clickPosition, facing.toYRot() + 180, Direction.Axis.Y);
         double x = rotatedClickPos.x;
         double y = rotatedClickPos.y;
-        if (existingAttachments[ElectricalPanelSlot.FULL_SLOT.ordinal()] != null)
+        if (existingAttachments[FULL_SLOT.ordinal()] != null)
             return null;
 
         ElectricalPanelSlot closestSlot = null;
         double closestDistanceSqr = Double.MAX_VALUE;
         SlotLoop:
-        for (ElectricalPanelSlot possibleSlot : possibleSlots) {
+        for (ElectricalPanelSlot possibleSlot : possibleSlots().keySet()) {
             for (PanelAttachment attachment : existingAttachments)
                 if (attachment != null && attachment.slot.shape.intersects(possibleSlot.shape))
                     continue SlotLoop;
@@ -149,57 +154,62 @@ public enum PanelAttachmentMode {
         return closestSlot;
     }
 
-    public InWorldNode[] getNodesFor(BlockPos pos, ElectricalPanelSlot slot) {
+    class Normal implements PanelAttachmentMode {
+        private final Map<ElectricalPanelSlot, IntList> nodes;
 
-        return switch (this) {
-            case FULL_NONE, FULL_OR_HALF_NONE, HALF_NONE, HALF_OR_THIRD_NONE, HALF_OR_THIRD_OR_SMOL_NONE
-                    -> new InWorldNode[]{};
-            case FULL_SINGLE -> new InWorldNode[] {
-                    new InWorldNode(3, pos), new InWorldNode(16, pos)};
-            case FULL_DOUBLE -> new InWorldNode[] {
-                    new InWorldNode(1, pos), new InWorldNode(5, pos),
-                    new InWorldNode(14, pos), new InWorldNode(18, pos)};
-            case FULL_TRIPLE -> new InWorldNode[] {
-                    new InWorldNode(1, pos), new InWorldNode(3, pos),
-                    new InWorldNode(5, pos), new InWorldNode(14, pos),
-                    new InWorldNode(16, pos),new InWorldNode(18, pos)};
-            case FULL_QUAD -> new InWorldNode[] {
-                    new InWorldNode(0, pos), new InWorldNode(2, pos),
-                    new InWorldNode(4, pos), new InWorldNode(6, pos),
-                    new InWorldNode(13, pos), new InWorldNode(15, pos),
-                    new InWorldNode(17, pos), new InWorldNode(19, pos)};
-            default -> {
-                if (slot == ElectricalPanelSlot.HALF_LOWER)
-                    yield new InWorldNode[]{new InWorldNode(22, pos), new InWorldNode(23, pos)};
-                else if (slot == ElectricalPanelSlot.HALF_UPPER)
-                    yield new InWorldNode[]{new InWorldNode(20, pos), new InWorldNode(21, pos)};
-                else if (slot == ElectricalPanelSlot.HALF_RIGHT)
-                    yield new InWorldNode[]{new InWorldNode(20, pos), new InWorldNode(22, pos)};
-                else if (slot == ElectricalPanelSlot.HALF_LEFT)
-                    yield new InWorldNode[]{new InWorldNode(21, pos), new InWorldNode(23, pos)};
-                else if (slot == ElectricalPanelSlot.THIRD_RIGHT)
-                    yield new InWorldNode[]{new InWorldNode(7, pos), new InWorldNode(10, pos)};
-                else if (slot == ElectricalPanelSlot.THIRD_CENTERED)
-                    yield new InWorldNode[]{new InWorldNode(8, pos), new InWorldNode(11, pos)};
-                else if (slot == ElectricalPanelSlot.THIRD_LEFT)
-                    yield new InWorldNode[]{new InWorldNode(9, pos), new InWorldNode(12, pos)};
+        public Normal(Map<ElectricalPanelSlot, IntList> nodes) {
+            this.nodes = nodes;
+        }
 
-                else if (slot == ElectricalPanelSlot.THIRD_RIGHT_BOTTOM)
-                    yield new InWorldNode[]{new InWorldNode(131, pos), new InWorldNode(31, pos)};
-                else if (slot == ElectricalPanelSlot.THIRD_CENTERED_BOTTOM)
-                    yield new InWorldNode[]{new InWorldNode(135, pos), new InWorldNode(35, pos)};
-                else if (slot == ElectricalPanelSlot.THIRD_LEFT_BOTTOM)
-                    yield new InWorldNode[]{new InWorldNode(139, pos), new InWorldNode(39, pos)};
+        @Override
+        public Map<ElectricalPanelSlot, IntList> possibleSlots() {
+            return nodes;
+        }
+    }
 
-                else if (slot == ElectricalPanelSlot.THIRD_RIGHT_TOP)
-                    yield new InWorldNode[]{new InWorldNode(291, pos), new InWorldNode(191, pos)};
-                else if (slot == ElectricalPanelSlot.THIRD_CENTERED_TOP)
-                    yield new InWorldNode[]{new InWorldNode(295, pos), new InWorldNode(195, pos)};
-                else if (slot == ElectricalPanelSlot.THIRD_LEFT_TOP)
-                    yield new InWorldNode[]{new InWorldNode(299, pos), new InWorldNode(199, pos)};
+    class Builder {
+        private ElectricalPanelSlot currentSlot;
+        private IntList currentNodes;
+        private final Map<ElectricalPanelSlot, IntList> nodes = new HashMap<>();
 
-                yield new InWorldNode[]{};
+        public Builder() {
+
+        }
+
+        public Builder addSlot(ElectricalPanelSlot slot) {
+            if (currentNodes != null && currentSlot != null) {
+                nodes.put(currentSlot, currentNodes);
             }
-        };
+
+            currentSlot = slot;
+            currentNodes = new IntArrayList();
+            return this;
+        }
+
+        public Builder node(int id) {
+            if (currentNodes == null || currentSlot == null)
+                throw new IllegalStateException("Tried to add a node without specifying the slot");
+
+            currentNodes.add(id);
+            return this;
+        }
+
+        public Builder node(int i1, int i2) {
+            return node(i1).node(i2);
+        }
+
+        public Builder node(int i1, int i2, int i3) {
+            return node(i1).node(i2).node(i3);
+        }
+        public Builder node(int i1, int i2, int i3, int i4) {
+            return node(i1).node(i2).node(i3).node(i4);
+        }
+
+        public PanelAttachmentMode build() {
+            if (currentNodes != null && currentSlot != null) {
+                nodes.put(currentSlot, currentNodes);
+            }
+            return new Normal(nodes);
+        }
     }
 }

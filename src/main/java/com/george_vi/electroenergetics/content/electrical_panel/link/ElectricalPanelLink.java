@@ -4,10 +4,6 @@ import com.george_vi.electroenergetics.CEEPartialModels;
 import com.george_vi.electroenergetics.content.electrical_panel.ElectricalPanelBlockEntity;
 import com.george_vi.electroenergetics.foundation.CEELang;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.simibubi.create.Create;
-import com.simibubi.create.content.redstone.link.IRedstoneLinkable;
-import com.simibubi.create.content.redstone.link.RedstoneLinkNetworkHandler;
-import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.render.CachedBuffers;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -27,15 +23,17 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;
 
-public interface ElectricalPanelLink extends MenuProvider, IRedstoneLinkable {
+import java.util.Arrays;
+
+public interface ElectricalPanelLink extends MenuProvider {
 
     ItemStack[] getLinkFrequencies();
-
+    ElectricalPanelLinkable[] getLinkables();
     Level getLevel();
 
     default void writeLinkFrequencies(CompoundTag tag, HolderLookup.Provider registries) {
-        
-        for (int i = 0; i < 2; i++) {
+
+        for (int i = 0; i < frequencies() * 2; i++) {
             ItemStack linkFrequency = getLinkFrequencies()[i];
             if (linkFrequency.isEmpty())
                 continue;
@@ -44,8 +42,7 @@ public interface ElectricalPanelLink extends MenuProvider, IRedstoneLinkable {
     }
 
     default void readLinkFrequencies(CompoundTag tag, HolderLookup.Provider registries) {
-
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < frequencies() * 2; i++) {
             if (!tag.contains("LinkFrequency" + i)) {
                 getLinkFrequencies()[i] = ItemStack.EMPTY;
                 continue;
@@ -56,28 +53,83 @@ public interface ElectricalPanelLink extends MenuProvider, IRedstoneLinkable {
             else
                 getLinkFrequencies()[i] = ItemStack.EMPTY;
         }
-    }
-
-    default void updateLinkState() {
-        if (isAlive() && getLevel() != null && !getLevel().isClientSide)
-            Create.REDSTONE_LINK_NETWORK_HANDLER.addToNetwork(getLevel(), this);
-
-    }
-
-    default void removeLinkState() {
-        if (getLevel() != null && !getLevel().isClientSide) {
-            Create.REDSTONE_LINK_NETWORK_HANDLER.removeFromNetwork(getLevel(), this);
+        for (int i = 0; i < frequencies(); i++) {
+            getLinkables()[i].freq1 = getLinkFrequencies()[i * 2];
+            getLinkables()[i].freq2 = getLinkFrequencies()[i * 2 + 1];
         }
+    }
+
+    default void updateLinkState(int frequency) {
+        if (frequency == -1) {
+            for (int i = 0; i < frequencies(); i++) {
+                ElectricalPanelLinkable linkable = getLinkables()[i];
+
+                if (linkable.freq1 != getLinkFrequencies()[i * 2] ||
+                        linkable.freq2 != getLinkFrequencies()[i * 2 + 1])
+                    linkable.removeLinkState();
+                linkable.freq1 = getLinkFrequencies()[i * 2];
+                linkable.freq2 = getLinkFrequencies()[i * 2 + 1];
+                linkable.updateLinkState();
+            }
+        } else {
+            ElectricalPanelLinkable linkable = getLinkables()[frequency];
+            if (linkable.freq1 != getLinkFrequencies()[frequency * 2] ||
+                    linkable.freq2 != getLinkFrequencies()[frequency * 2 + 1])
+                linkable.removeLinkState();
+            linkable.freq1 = getLinkFrequencies()[frequency * 2];
+            linkable.freq2 = getLinkFrequencies()[frequency * 2 + 1];
+            linkable.updateLinkState();
+        }
+    }
+
+    default void updateLinkState(int frequency, int strength) {
+        if (frequency == -1) {
+            for (int i = 0; i < frequencies(); i++) {
+                ElectricalPanelLinkable linkable = getLinkables()[i];
+
+                if (linkable.freq1 != getLinkFrequencies()[i * 2] ||
+                        linkable.freq2 != getLinkFrequencies()[i * 2 + 1])
+                    linkable.removeLinkState();
+                linkable.freq1 = getLinkFrequencies()[i * 2];
+                linkable.freq2 = getLinkFrequencies()[i * 2 + 1];
+                linkable.updateLinkState(strength);
+            }
+        } else {
+            ElectricalPanelLinkable linkable = getLinkables()[frequency];
+            if (linkable.freq1 != getLinkFrequencies()[frequency * 2] ||
+                    linkable.freq2 != getLinkFrequencies()[frequency * 2 + 1])
+                linkable.removeLinkState();
+            linkable.freq1 = getLinkFrequencies()[frequency * 2];
+            linkable.freq2 = getLinkFrequencies()[frequency * 2 + 1];
+            linkable.updateLinkState(strength);
+        }
+    }
+
+    default void removeLinkState(int frequency) {
+        if (frequency == -1) {
+            Arrays.stream(getLinkables()).forEach(ElectricalPanelLinkable::removeLinkState);
+        } else {
+            getLinkables()[frequency].removeLinkState();
+        }
+    }
+
+    default int frequencies() {
+        return 1;
     }
 
     @OnlyIn(Dist.CLIENT)
     default void renderLinkAntenna(ElectricalPanelBlockEntity be, PoseStack ms,
                                    MultiBufferSource buffer, int light) {
-        if (!isAlive())
+        if (Arrays.stream(getLinkFrequencies()).allMatch(ItemStack::isEmpty))
             return;
 
-        boolean powered = getTransmittedStrength() > 0;
-
+        boolean powered = false;
+        for (ElectricalPanelLinkable linkable : getLinkables()) {
+            if (linkable.getTransmittedStrength() != 0) {
+                powered = true;
+                break;
+            }
+        }
 
         CachedBuffers.partial(powered ?
                         CEEPartialModels.PANEL_ATTACHMENT_LINK_ANTENNA_POWERED :
@@ -86,26 +138,16 @@ public interface ElectricalPanelLink extends MenuProvider, IRedstoneLinkable {
                 .renderInto(ms, buffer.getBuffer(RenderType.CUTOUT));
     }
 
-    @Override
-    default boolean isAlive() {
-        return !(getLinkFrequencies()[0].isEmpty() && getLinkFrequencies()[1].isEmpty());
-    }
-
-    @Override
-    default boolean isListening() {
+    default boolean hasReturnToZeroOption() {
         return false;
     }
 
-    @Override
-    default void setReceivedStrength(int power) {
+    default void setReturnToZero(boolean returnToZero) {
 
     }
 
-    @Override
-    default Couple<RedstoneLinkNetworkHandler.Frequency> getNetworkKey() {
-        return Couple.create(
-                RedstoneLinkNetworkHandler.Frequency.of(getLinkFrequencies()[0]),
-                RedstoneLinkNetworkHandler.Frequency.of(getLinkFrequencies()[1]));
+    default boolean getReturnToZero() {
+        return false;
     }
 
     @Override
@@ -122,12 +164,40 @@ public interface ElectricalPanelLink extends MenuProvider, IRedstoneLinkable {
         return new Simple(extraData);
     }
 
+    BlockPos getLocation();
+
+    default void writeForConfiguration(RegistryFriendlyByteBuf buf) {
+        buf.writeVarInt(frequencies());
+        buf.writeBoolean(hasReturnToZeroOption());
+        buf.writeBoolean(getReturnToZero());
+        for (int i = 0; i < frequencies() * 2; i++)
+            ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, getLinkFrequencies()[i]);
+    }
+
     class Simple implements ElectricalPanelLink {
-        ItemStack[] linkFrequencies = new ItemStack[2];
+        private final ItemStack[] linkFrequencies;
+        private final ElectricalPanelLinkable[] linkables;
+        private final int frequencies;
+        private final boolean hasReturnToZero;
+        private final boolean returnToZero;
 
         public Simple(RegistryFriendlyByteBuf extraData) {
-            for (int i = 0; i < 2; i++)
+            frequencies = extraData.readVarInt();
+            linkFrequencies = new ItemStack[frequencies * 2];
+            linkables = new ElectricalPanelLinkable[frequencies];
+            hasReturnToZero = extraData.readBoolean();
+            returnToZero = extraData.readBoolean();
+            for (int i = 0; i < frequencies * 2; i++) {
                 linkFrequencies[i] = ItemStack.OPTIONAL_STREAM_CODEC.decode(extraData);
+            }
+            for (int i = 0; i < frequencies; i++) {
+                linkables[i] = new ElectricalPanelLinkable(this);
+            }
+        }
+
+        @Override
+        public int frequencies() {
+            return frequencies;
         }
 
         @Override
@@ -136,23 +206,28 @@ public interface ElectricalPanelLink extends MenuProvider, IRedstoneLinkable {
         }
 
         @Override
+        public ElectricalPanelLinkable[] getLinkables() {
+            return linkables;
+        }
+
+        @Override
         public Level getLevel() {
-            return null;
-        }
-
-        @Override
-        public int getTransmittedStrength() {
-            return 0;
-        }
-
-        @Override
-        public Couple<RedstoneLinkNetworkHandler.Frequency> getNetworkKey() {
             return null;
         }
 
         @Override
         public BlockPos getLocation() {
             return null;
+        }
+
+        @Override
+        public boolean hasReturnToZeroOption() {
+            return hasReturnToZero;
+        }
+
+        @Override
+        public boolean getReturnToZero() {
+            return returnToZero;
         }
     }
 }

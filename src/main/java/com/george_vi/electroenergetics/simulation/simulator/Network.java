@@ -1,5 +1,7 @@
 package com.george_vi.electroenergetics.simulation.simulator;
 
+import com.george_vi.electroenergetics.foundation.nodes.AttachedNode;
+import com.george_vi.electroenergetics.foundation.nodes.InWorldNode;
 import com.george_vi.electroenergetics.simulation.CircuitBuilder;
 import com.george_vi.electroenergetics.simulation.SimulationNode;
 import com.george_vi.electroenergetics.simulation.electrical_properties.*;
@@ -9,7 +11,6 @@ import com.george_vi.electroenergetics.simulation.util.*;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.longs.*;
-import net.minecraft.util.Mth;
 
 import java.util.*;
 
@@ -25,7 +26,8 @@ public class Network {
     final Long2DoubleMap voltageSources = new Long2DoubleOpenHashMap();
     final Long2ObjectMap<ElectricalProperties> originalMicroTicked = new Long2ObjectOpenHashMap<>();
     final Long2ObjectMap<ElectricalProperties> simulationMicroTicked = new Long2ObjectOpenHashMap<>();
-    final Long2ObjectMap<NonlinearProperties> simulationNonLinear = new Long2ObjectOpenHashMap<>();
+    final LongList solverIterationTickerIDs = new LongArrayList();
+    final List<ISolverIterationTicker> solverIterationTickers = new ArrayList<>();
 
     public SparseMatrix conductanceMatrix;
     public double[] rhsVector;
@@ -45,7 +47,9 @@ public class Network {
     private static final byte FIXED = 2;
 
     public Network(Collection<SimulationNode> allNodes, CircuitBuilder builder, InfrastructureSavedData sd) {
-        allOriginalNodeIDs = new int[allNodes.size()];
+        // +1 because there is a ground node
+        SimulationNode groundNode = new SimulationNode(new AttachedNode(0, "groundNode"), -1);
+        allOriginalNodeIDs = new int[allNodes.size() + 1];
         int i = 0;
         for (SimulationNode node : allNodes)
             allOriginalNodeIDs[i++] = node.ordinal;
@@ -83,15 +87,18 @@ public class Network {
                     continue;
 
                 optimizedNodeList.connect(nodeID, neighborID, connectionProperties);
-
-                if (connectionProperties instanceof MicroTickingElectricalProperties) {
+                if (connectionProperties instanceof ISolverIterationTicker t) {
+                    solverIterationTickers.add(t);
+                    solverIterationTickerIDs.add(DataPacker.pack(nodeID, neighborID));
+                } else if (connectionProperties.invert() instanceof ISolverIterationTicker t) {
+                    solverIterationTickers.add(t);
+                    solverIterationTickerIDs.add(DataPacker.pack(neighborID, nodeID));
+                } else if (connectionProperties instanceof MicroTickingElectricalProperties) {
                     simulationMicroTicked.put(DataPacker.pack(nodeID, neighborID), connectionProperties);
                     originalMicroTicked.put(DataPacker.pack(originalOptimizedNodes[nodeID], originalOptimizedNodes[neighborID]), connectionProperties);
-                } else if (connectionProperties instanceof MicroTickingInvertedElectricalProperties) {
-                    simulationMicroTicked.put(DataPacker.pack(neighborID, nodeID), connectionProperties.invert());
-                    originalMicroTicked.put(DataPacker.pack(originalOptimizedNodes[neighborID], originalOptimizedNodes[nodeID]), connectionProperties.invert());
-                } else if (connectionProperties instanceof NonlinearProperties) {
-                    simulationNonLinear.put(DataPacker.pack(nodeID, neighborID), (NonlinearProperties) connectionProperties);
+                } else if (connectionProperties.invert() instanceof MicroTickingElectricalProperties microTicking) {
+                    simulationMicroTicked.put(DataPacker.pack(neighborID, nodeID), microTicking);
+                    originalMicroTicked.put(DataPacker.pack(originalOptimizedNodes[neighborID], originalOptimizedNodes[nodeID]), microTicking);
                 } else if (connectionProperties instanceof CoupledProperties cp && cp.isPrimary()) {
                     coupledProperties.add(cp);
                 } else {
@@ -151,6 +158,14 @@ public class Network {
             firstIteration = true;
         }
 
+        for (int i = 0; i < solverIterationTickerIDs.size(); i++) {
+            long packedConnection = solverIterationTickerIDs.getLong(i);
+            int nodeID = DataPacker.unpackFirstI(packedConnection);
+            int neighborID = DataPacker.unpackSecondI(packedConnection);
+            ISolverIterationTicker ticker = solverIterationTickers.get(i);
+            ticker.tick(x[nodeID], x[neighborID], firstIteration);
+        }
+
         for (int nodeID = 0; nodeID < optimizedNodeList.totalNodes(); nodeID++) {
             double totalConductance = 0;
             for (Int2ObjectMap.Entry<ElectricalProperties> e : optimizedNodeList.getNeighbors(nodeID).int2ObjectEntrySet()) {
@@ -158,21 +173,22 @@ public class Network {
                 ElectricalProperties properties = e.getValue();
 
                 double conductance = properties.conductance();
-                totalConductance += conductance;
+                totalConductance += conductance + properties.gMin();
                 if (neighborID > nodeID)
                     continue;
+
+                if (properties instanceof NonlinearProperties nl) {
+                    nl.stampNonLinear(x[nodeID], x[neighborID], conductanceMatrix, rhsVector, nodeID, neighborID, firstIteration);
+                } else if (properties.invert() instanceof NonlinearProperties nl) {
+                    nl.stampNonLinear(x[neighborID], x[nodeID], conductanceMatrix, rhsVector, neighborID, nodeID, firstIteration);
+                }
+
 
                 // apply current source
                 if (properties.isCurrentSource()) {
                     double v = properties.currentSource();
                     rhsVector[nodeID] += v;
                     rhsVector[neighborID] -= v;
-                }
-
-                if (properties instanceof NonlinearProperties nl) {
-                    nl.stampNonLinear(x[nodeID], x[neighborID], conductanceMatrix, rhsVector, nodeID, neighborID, firstIteration);
-                } if (properties instanceof NonLinearInvertedElectricalProperties nli) {
-                    nli.original.stampNonLinear(x[neighborID], x[nodeID], conductanceMatrix, rhsVector, neighborID, nodeID, firstIteration);
                 }
 
                 if (conductance == 0)
@@ -272,7 +288,7 @@ public class Network {
             } else if (entry instanceof CoupledPropertiesOptimizationEntry optimization) {
                 double leftPrimary = toFill[optimization.leftPrimary() * totalMicroTicks + microTick];
                 double rightPrimary = toFill[optimization.rightPrimary() * totalMicroTicks + microTick];
-                double voltage = leftPrimary - rightPrimary;
+                double voltage = rightPrimary - leftPrimary;
                 double current = voltage / optimization.replacementResistance();
                 double scaledCurrent = current / optimization.ratio();
                 double scaledVoltage = voltage * optimization.ratio();
@@ -293,7 +309,7 @@ public class Network {
             } else if (entry instanceof AdvancedCoupledPropertiesOptimizationEntry optimization) {
                 double leftPrimary = toFill[optimization.leftPrimary() * totalMicroTicks + microTick];
                 double rightPrimary = toFill[optimization.rightPrimary() * totalMicroTicks + microTick];
-                double voltage = leftPrimary - rightPrimary;
+                double voltage = rightPrimary - leftPrimary;
                 double scaledVoltage = voltage * optimization.ratio();
 
                 // set the origin voltage so it doesn't mess stuff up when a branch is connected to one of the nodes
@@ -304,8 +320,8 @@ public class Network {
                     originVoltage = toFill[optimization.rightNode() * totalMicroTicks + microTick] - scaledVoltage;
                 //
 
-                double v1 = originVoltage;
-                double v2 = originVoltage + scaledVoltage;
+                double v1 = originVoltage - scaledVoltage;
+                double v2 = originVoltage;
                 toFill[optimization.leftNode() * totalMicroTicks + microTick] = v2;
                 toFill[optimization.rightNode() * totalMicroTicks + microTick] = v1;
 
@@ -314,7 +330,8 @@ public class Network {
 
         }
         // Fix grounds - offset the nodes of each network so that ground is at zero volts
-
+        if (true)
+            return;
         double[] currentRegionZeroPotential = builder.currentRegionZeroPotential;
         int[] nodeCurrentRegionID = builder.nodeCurrentRegionID;
         double[] nodeGroundConductance = builder.nodeGroundConductance;

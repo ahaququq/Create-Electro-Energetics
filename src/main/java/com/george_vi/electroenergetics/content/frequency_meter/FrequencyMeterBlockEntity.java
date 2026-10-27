@@ -83,7 +83,7 @@ public class FrequencyMeterBlockEntity extends SmartBlockEntity implements IHave
 
         CEELang.builder()
                 .add(CreateLang.number(v))
-                .add(Component.translatable("electroenergetics.generic.hertz"))
+                .add(CEELang.translateDirect("generic.hertz"))
                 .style(v < 5 ? ChatFormatting.DARK_GRAY : ChatFormatting.AQUA)
                 .forGoggles(tooltip);
 

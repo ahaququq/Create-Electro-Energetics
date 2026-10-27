@@ -2,6 +2,7 @@ package com.george_vi.electroenergetics;
 
 import com.george_vi.electroenergetics.client.ElectricStatsTooltipModifier;
 import com.george_vi.electroenergetics.compat.computercraft.CCProxy;
+import com.george_vi.electroenergetics.compat.strut_your_stuff.StrutYourStuffRegistryEntries;
 import com.george_vi.electroenergetics.config.CEEConfigs;
 import com.george_vi.electroenergetics.content.electrical_panel.attachments.CEEPanelAttachmentTypes;
 import com.george_vi.electroenergetics.content.fuse.FuseHoldables;
@@ -14,6 +15,7 @@ import net.createmod.catnip.lang.FontHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod;
 import org.slf4j.Logger;
@@ -58,6 +60,9 @@ public class CreateElectroEnergetics
         CEEWireInteractionBehaviours.register(modEventBus);
         CEESimulatedDeviceFeatureTypes.register(modEventBus);
         CEEConfigs.register(modLoadingContext, modContainer);
+
+        if (ModList.get().isLoaded("struts"))
+            StrutYourStuffRegistryEntries.register();
 
         FuseHoldables.register();
 

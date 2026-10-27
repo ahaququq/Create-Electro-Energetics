@@ -64,7 +64,7 @@ public class EnergyMeterBlock extends SimpleElectricalDeviceBlock<EnergyMeterDev
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
-        withBlockEntityDo(level, pos, be -> be.owner = be.owner == null ? placer.getUUID() : be.owner);
+        withBlockEntityDo(level, pos, be -> be.setOwner((be.owner == null && placer != null) ? placer.getUUID() : be.owner));
     }
 
     @Override

@@ -81,7 +81,7 @@ public class ElectricityBasicsScenes {
         scene.idle(130);
 
         scene.overlay().showText(100)
-                .text("That's called Forward Bias")
+                .text("That's called Forward Bias. Diodes have a voltage drop of 0.7V")
                 .colored(PonderPalette.GREEN)
                 .pointAt(diode.getBottomCenter())
                 .attachKeyFrame()

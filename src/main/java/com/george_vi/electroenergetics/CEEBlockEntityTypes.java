@@ -6,6 +6,8 @@ import com.george_vi.electroenergetics.content.bulb.BulbBlockEntityRenderer;
 import com.george_vi.electroenergetics.content.buzzer.BuzzerBlockEntity;
 import com.george_vi.electroenergetics.content.converter.ConverterBlockEntity;
 import com.george_vi.electroenergetics.content.creative_battery.CreativeBatteryBlockEntity;
+import com.george_vi.electroenergetics.content.electric_fan.ElectricFanBlockEntity;
+import com.george_vi.electroenergetics.content.electric_fan.ElectricFanBlockEntityRenderer;
 import com.george_vi.electroenergetics.content.electric_motor.ElectricMotorBlockEntity;
 import com.george_vi.electroenergetics.content.electric_motor.ElectricMotorRenderer;
 import com.george_vi.electroenergetics.content.electric_pump.ElectricPumpBlockEntity;
@@ -82,6 +84,11 @@ public class CEEBlockEntityTypes {
             .displaySource(CEEDisplaySources.AMPERAGE)
             .validBlock(CEEBlocks.AMMETER::get)
             .renderer(() -> ElectricGaugeRenderer::ammeter)
+            .register();
+
+    public static final BlockEntityEntry<ElectricFanBlockEntity> ELECTRIC_FAN = REGISTRATE.blockEntity("electric_fan", ElectricFanBlockEntity::new)
+            .validBlock(CEEBlocks.ELECTRIC_FAN::get)
+            .renderer(() -> ElectricFanBlockEntityRenderer::new)
             .register();
 
     public static final BlockEntityEntry<BulbBlockEntity> BULB = REGISTRATE.blockEntity("bulb", BulbBlockEntity::new)

@@ -15,9 +15,6 @@ public class SimulationNode {
      * Used to make sure the both circuits are solved within one network. Use with care.
      */
     public IntList invisibleAdjacency = new IntArrayList(8);
-    /**
-     * if it's negative, that means it's just a default zero-potential, not ground
-     */
     public double groundConductance = 0d;
 
     public double rmsVoltage;

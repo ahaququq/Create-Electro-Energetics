@@ -28,8 +28,8 @@ public class ThreePhaseAlternatorBrushesDevice extends SimpleElectricalDevice {
     public AtomicInteger workCounter = new AtomicInteger();
     public VirtualRotor virtualRotor = new VirtualRotor();
     public BlockPos otherBrush;
-    public boolean fast;
-    public boolean slow;
+    public int fast;
+    public int slow;
     public float controlModifier;
     public AlternatorBrushesBlockEntity be;
     public PhaseWindingProperties phaseA = new PhaseWindingProperties(0,
@@ -77,10 +77,11 @@ public class ThreePhaseAlternatorBrushesDevice extends SimpleElectricalDevice {
         }
 
         if (this.slow == this.fast) {
-            this.controlModifier *= 0.995f;
+            this.controlModifier *= 0.99f;
         } else {
-            float v = this.slow ? -0.01f : 0.01f;
-            this.controlModifier = Mth.clamp(this.controlModifier + v, -1f, 1f);
+            int max = -slow + fast;
+            float v = max < 0 ? -0.01f : 0.01f;
+            this.controlModifier = Mth.clamp(this.controlModifier + v, -Math.abs(max) / 30f, Math.abs(max) / 30f);
         }
     }
 
@@ -112,8 +113,8 @@ public class ThreePhaseAlternatorBrushesDevice extends SimpleElectricalDevice {
         this.storedEnergy.set(tag.getFloat("StoredEnergy"));
         this.virtualRotor.angle = tag.getFloat("Angle");
         this.otherBrush = tag.contains("OtherBrush") ? NBTHelper.readBlockPos(tag, "OtherBrush") : null;
-        this.fast = tag.getBoolean("Fast");
-        this.slow = tag.getBoolean("Slow");
+        this.fast = tag.getInt("Fast");
+        this.slow = tag.getInt("Slow");
     }
 
     @Override
@@ -126,10 +127,10 @@ public class ThreePhaseAlternatorBrushesDevice extends SimpleElectricalDevice {
         tag.putDouble("StoredEnergy", this.storedEnergy.get());
         if (this.otherBrush != null)
             tag.put("OtherBrush", NbtUtils.writeBlockPos(this.otherBrush));
-        if (this.slow)
-            tag.putBoolean("Slow", true);
-        if (this.fast)
-            tag.putBoolean("Fast", true);
+        if (this.slow != 0)
+            tag.putInt("Slow", slow);
+        if (this.fast != 0)
+            tag.putInt("Fast", fast);
     }
 
     public static class PhaseWindingProperties extends MicroTickingElectricalProperties {

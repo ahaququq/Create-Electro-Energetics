@@ -27,13 +27,21 @@ public class AnalogLeverHoldInteraction implements HoldInteractionBehavior {
     @Override
     public void release() {
         ElectricPropertiesOverlay.INSTANCE.removeAnalogLever();
+        CatnipServices.NETWORK.sendToServer(new SetPanelAttachmentOptionsPacket(pos, panelSlot, SetPanelAttachmentOptionsPacket.HOLD_STATUS, false));
     }
+
+    boolean ticked = false;
 
     @Override
     public void tick() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null)
             return;
+
+        if (!ticked) {
+            CatnipServices.NETWORK.sendToServer(new SetPanelAttachmentOptionsPacket(pos, panelSlot, SetPanelAttachmentOptionsPacket.HOLD_STATUS, true));
+            ticked = true;
+        }
 
         int prevRedstoneSignal = redstoneSignal;
         redstoneSignal = Math.round(analogSignal);

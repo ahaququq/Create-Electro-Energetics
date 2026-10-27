@@ -1,15 +1,15 @@
 package com.george_vi.electroenergetics.simulation;
 
-import com.george_vi.electroenergetics.foundation.nodes.DirectionalNodeConnection;
-import com.george_vi.electroenergetics.foundation.nodes.InWorldNode;
-import com.george_vi.electroenergetics.foundation.nodes.Node;
+import com.george_vi.electroenergetics.foundation.nodes.*;
 import com.george_vi.electroenergetics.simulation.electrical_properties.CoupledProperties;
 import com.george_vi.electroenergetics.simulation.electrical_properties.ElectricalProperties;
 import com.george_vi.electroenergetics.simulation.electrical_properties.MicroTickingElectricalProperties;
 import com.george_vi.electroenergetics.simulation.electrical_properties.ResistorProperties;
+import com.george_vi.electroenergetics.simulation.simulator.Network;
 import com.george_vi.electroenergetics.simulation.util.DataPacker;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -24,7 +24,6 @@ public class CircuitBuilder {
     List<SimulationNode> allIndexedNodes;
     Object2IntMap<Node> nodeIndexes;
     Int2IntMap defaultZeroPotentials;  // K -> node id, V -> priority
-    public Long2ObjectMap<MicroTickingElectricalProperties> microTickers = new Long2ObjectOpenHashMap<>();
     int id = 0;
 
     public CircuitBuilder(Set<InWorldNode> nodes) {
@@ -83,8 +82,6 @@ public class CircuitBuilder {
 
         SimulationNode indexedNode1 = allIndexedNodes.get(n1);
         SimulationNode indexedNode2 = allIndexedNodes.get(n2);
-        if (properties instanceof MicroTickingElectricalProperties ep)
-            microTickers.put(DataPacker.pack(n1, n2), ep);
 
         if (properties instanceof CoupledProperties cp && cp.isPrimary()) { // Mark the node so it's solved in the same circuit as the coupled nodes
             SimulationNode in1 = getNode(cp.coupledNodes().node1());
@@ -101,8 +98,6 @@ public class CircuitBuilder {
     public void connect(SimulationNode n1, SimulationNode n2, ElectricalProperties properties) {
         if (Double.isNaN(properties.resistance()) || Double.isNaN(properties.voltageSource()) || Double.isNaN(properties.currentSource()))
             return;
-        if (properties instanceof MicroTickingElectricalProperties ep)
-            microTickers.put(DataPacker.pack(n1.ordinal, n2.ordinal), ep);
 
         if (properties instanceof CoupledProperties cp && cp.isPrimary()) { // Mark the node so it's solved in the same circuit as the coupled nodes
             SimulationNode n = getNode(cp.coupledNodes().node1());
@@ -198,9 +193,38 @@ public class CircuitBuilder {
                 allNetworks.add(networkNodes);
         }
 
+        // can add stuff to current regions here
+
+        // Turn the ground into a separate node so it can be optimized better
+        // TODO: realistic grounding?
+        for (int i = 0; i < allNetworks.size(); i++) {
+            List<SimulationNode> network = allNetworks.get(i);
+            SimulationNode ground = addNode(new AttachedNode(i, "ExposedGroundNode"));
+            boolean foundGround = false;
+            for (SimulationNode node : network) {
+                if (node.groundConductance != 0) {
+                    foundGround = true;
+                    ElectricalProperties properties = ElectricalProperties.resistor(1 / node.groundConductance);
+                    node.adjacency.put(ground.ordinal, properties);
+                    ground.adjacency.put(node.ordinal, properties);
+                    node.groundConductance = 0;
+                }
+            }
+
+            if (foundGround) {
+                network.add(ground);
+                ground.groundConductance = 1;
+            }
+        }
+        //
+
+        nodeGroundConductance = new double[allIndexedNodes.size()];
+        nodeCurrentRegionID = new int[allIndexedNodes.size()];
+
         int currentRegionID = 0;
         currentRegionGrounded = new byte[allNetworks.size()];
         currentRegionZeroPotential = new double[allNetworks.size()];
+
         for (List<SimulationNode> networkNodes : allNetworks) {
             SimulationNode highestPriorityGround = null;
             int highestPriority = Integer.MIN_VALUE;
@@ -238,7 +262,7 @@ public class CircuitBuilder {
         }
 
         allNetworks.clear();
-        Arrays.fill(visited, false);
+        visited = new boolean[allIndexedNodes.size()];
         for (int i = 0; i < allIndexedNodes.size(); i++) {
             if (visited[i])
                 continue;

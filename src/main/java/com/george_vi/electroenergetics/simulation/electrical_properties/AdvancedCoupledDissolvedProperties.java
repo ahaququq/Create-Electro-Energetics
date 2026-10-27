@@ -65,8 +65,8 @@ public class AdvancedCoupledDissolvedProperties extends MicroTickingElectricalPr
             int node2 = originalNodeIDs[i + 1];
             if (properties instanceof MicroTickingElectricalProperties microTicking) {
                 microTicking.tick(allVoltages, microTick, totalMicroTicks, node1, node2);
-            } else if (properties instanceof MicroTickingInvertedElectricalProperties inv) {
-                inv.original.tick(allVoltages, microTick, totalMicroTicks, node2, node1);
+            } else if (properties.invert() instanceof MicroTickingElectricalProperties microTicking) {
+                microTicking.tick(allVoltages, microTick, totalMicroTicks, node2, node1);
             }
 
             // Turns every Norton source into a voltage source with series resistance
@@ -113,8 +113,8 @@ public class AdvancedCoupledDissolvedProperties extends MicroTickingElectricalPr
             int node2 = originalNodeIDs[i + 1];
             if (originalProperties[i] instanceof MicroTickingElectricalProperties microTicking) {
                 microTicking.afterTick(allVoltages, node1, node2, microTick, totalMicroTicks);
-            } else if (originalProperties[i] instanceof MicroTickingInvertedElectricalProperties inv) {
-                inv.original.afterTick(allVoltages, node2, node1, microTick, totalMicroTicks);
+            } else if (originalProperties[i].invert() instanceof MicroTickingElectricalProperties microTicking) {
+                microTicking.afterTick(allVoltages, node2, node1, microTick, totalMicroTicks);
             }
         }
     }
@@ -127,7 +127,7 @@ public class AdvancedCoupledDissolvedProperties extends MicroTickingElectricalPr
         double v2 = toFill[originalNodeIDs[originalNodeIDs.length - 1] * totalMicroTicks + microTick];
         double vd = (v1 - v2);
         double current = vd / totalResistance;
-        current -= (currentSource / ratio);
+        current += (currentSource / ratio);
         double currentVoltage = v1;
         for (int i = 0; i < originalResistances.length; i++) {
             int nextNodeID = originalNodeIDs[i + 1];

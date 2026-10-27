@@ -1,6 +1,9 @@
 package com.george_vi.electroenergetics.foundation;
 
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.Arrays;
 
 public class WirePoints {
     private double[] values;
@@ -107,6 +110,11 @@ public class WirePoints {
         values = arr;
     }
 
+    public void preSize(int size) {
+        if (size * 3 > values.length)
+            values = Arrays.copyOf(values, size * 3);
+    }
+
     public void copyInto(int index, int positions, double[] toFill, int toFillPos) {
         if ((index + positions - 1) >= size || index < 0)
             throw new ArrayIndexOutOfBoundsException(index + positions - 1);
@@ -139,7 +147,19 @@ public class WirePoints {
         return maxZ;
     }
 
+    public AABB getAABB() {
+        return new AABB(minX, minY, minZ, maxX, maxY, maxZ);
+    }
+
+    public AABB getAABB(double inflate) {
+        return new AABB(minX - inflate, minY - inflate, minZ - inflate, maxX + inflate, maxY + inflate, maxZ + inflate);
+    }
+
     public int size() {
         return size;
+    }
+
+    public void clear() {
+        size = 0;
     }
 }

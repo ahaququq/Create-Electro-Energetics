@@ -15,6 +15,7 @@ import com.george_vi.electroenergetics.content.creative_battery.CreativeBatteryB
 import com.george_vi.electroenergetics.content.cut_off_switch.CutOffSwitchBlock;
 import com.george_vi.electroenergetics.content.cut_off_switch.EmergencyStopBlock;
 import com.george_vi.electroenergetics.content.cut_off_switch.MomentarySwitchBlock;
+import com.george_vi.electroenergetics.content.electric_fan.ElectricFanBlock;
 import com.george_vi.electroenergetics.content.electric_motor.ElectricMotorBlock;
 import com.george_vi.electroenergetics.content.electric_pump.ElectricPumpBlock;
 import com.george_vi.electroenergetics.content.electrical_panel.ElectricalPanelBlock;
@@ -461,6 +462,16 @@ public class CEEBlocks {
             .build()
             .register();
 
+    public static final BlockEntry<ElectricFanBlock> ELECTRIC_FAN = REGISTRATE.block("electric_fan", ElectricFanBlock::new)
+            .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
+            .initialProperties(SharedProperties::softMetal)
+            .properties(p -> p.mapColor(MapColor.COLOR_GRAY))
+            .blockstate(DirectionalRolledDeviceBlock.generateBlockStateWithSuffix(bs -> bs.getValue(ElectricFanBlock.FORWARD) ? "forward" : ""))
+            .transform(pickaxeOnly())
+            .item()
+            .model((c, p) -> p.blockItem(c::getEntry, "/item"))
+            .build()
+            .register();
 
     public static final BlockEntry<TransformerBlock> TRANSFORMER = REGISTRATE.block("transformer", TransformerBlock::new)
             .tag(AllTags.AllBlockTags.SAFE_NBT.tag)

@@ -5,6 +5,7 @@ import com.george_vi.electroenergetics.CEESoundEvents;
 import com.george_vi.electroenergetics.content.cut_off_switch.SwitchingBehaviour;
 import com.george_vi.electroenergetics.content.electrical_panel.ElectricalPanelBlockEntity;
 import com.george_vi.electroenergetics.content.electrical_panel.link.ElectricalPanelLink;
+import com.george_vi.electroenergetics.content.electrical_panel.link.ElectricalPanelLinkable;
 import com.george_vi.electroenergetics.content.wire_spool.EmptySpoolItem;
 import com.george_vi.electroenergetics.content.wire_spool.WireSpoolItem;
 import com.george_vi.electroenergetics.simulation.BridgeCollector;
@@ -151,10 +152,7 @@ public class CutOffSwitchPanelAttachment extends PanelAttachment implements Elec
 
         if (AllBlocks.REDSTONE_LINK.isIn(stack)) {
             if (!level.isClientSide && player instanceof ServerPlayer && player.mayBuild())
-                player.openMenu(this, buf -> {
-                    for (int i = 0; i < 2; i++)
-                        ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, getLinkFrequencies()[i]);
-                });
+                player.openMenu(this, this::writeForConfiguration);
             return ItemInteractionResult.SUCCESS;
         }
 
@@ -176,7 +174,7 @@ public class CutOffSwitchPanelAttachment extends PanelAttachment implements Elec
         if (!level.isClientSide()) {
             CEESoundEvents.playOnServer(level, pos, isClosed ? CEESoundEvents.CONTACT_OPEN.get() : CEESoundEvents.CONTACT_CLOSE.get(), 1f, 1f);
             isClosed ^= true;
-            updateLinkState();
+            updateLinkState(-1, isClosed ? 15 : 0);
             sendData();
         }
         return ItemInteractionResult.SUCCESS;
@@ -184,17 +182,7 @@ public class CutOffSwitchPanelAttachment extends PanelAttachment implements Elec
 
     @Override
     public void initialize() {
-        updateLinkState();
-    }
-
-    @Override
-    public int getTransmittedStrength() {
-        return isClosed && isAlive() ? 15 : 0;
-    }
-
-    @Override
-    public BlockPos getLocation() {
-        return pos;
+        updateLinkState(-1);
     }
 
     @Override
@@ -203,22 +191,15 @@ public class CutOffSwitchPanelAttachment extends PanelAttachment implements Elec
     }
 
     @Override
+    public BlockPos getLocation() {
+        return pos;
+    }
+
+    @Override
     public void onRemoved(Player player) {
         super.onRemoved(player);
         if (!level.isClientSide)
-            Create.REDSTONE_LINK_NETWORK_HANDLER.removeFromNetwork(getLevel(), this);
-    }
-
-    @Override
-    public void updateLinkState() {
-        ElectricalPanelLink.super.updateLinkState();
-        sendData();
-    }
-
-    @Override
-    public void removeLinkState() {
-        ElectricalPanelLink.super.removeLinkState();
-        sendData();
+            removeLinkState(-1);
     }
 
     @Override
@@ -253,6 +234,13 @@ public class CutOffSwitchPanelAttachment extends PanelAttachment implements Elec
     @Override
     public ItemStack[] getLinkFrequencies() {
         return linkFrequencies;
+    }
+
+    ElectricalPanelLinkable[] linkables = new ElectricalPanelLinkable[] {new ElectricalPanelLinkable(this)};
+
+    @Override
+    public ElectricalPanelLinkable[] getLinkables() {
+        return linkables;
     }
 
     private enum Style implements StringRepresentable {

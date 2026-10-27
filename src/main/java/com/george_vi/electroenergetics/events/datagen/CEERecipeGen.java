@@ -335,6 +335,18 @@ public class CEERecipeGen extends RecipeProvider {
                 .unlockedBy("has_industrial_iron_block", has(AllBlocks.INDUSTRIAL_IRON_BLOCK))
                 .save(recipeOutput, CreateElectroEnergetics.rl("crafting/commutator"));
 
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CEEBlocks.ELECTRIC_FAN)
+                .pattern("Cc ")
+                .pattern("RMB")
+                .pattern("Cc ")
+                .define('C', CEEBlocks.CONNECTOR)
+                .define('c', CEEItems.COPPER_WIRE_SPOOL)
+                .define('M', AllItems.PROPELLER)
+                .define('R', CEEItems.COMMUTATOR)
+                .define('B', Items.IRON_BARS)
+                .unlockedBy("has_rotor", has(CEEBlocks.ALTERNATOR_ROTOR))
+                .save(recipeOutput, CreateElectroEnergetics.rl("crafting/electric_fan"));
+
         for (DyeColor color : DyeColor.values()) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CEEBlocks.ELECTRIC_MOTORS[color.ordinal()])
                     .pattern("Cc ")

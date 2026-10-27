@@ -31,6 +31,7 @@
     "SchematicPrinterMixin",
     "StructureTemplateMixin",
     "SubLevelAssemblyHelperMixin",
-    "TrainMixin"
+    "TrainMixin",
+    "compat.ElectricFanBlockEntityMixin"
   ]
 }

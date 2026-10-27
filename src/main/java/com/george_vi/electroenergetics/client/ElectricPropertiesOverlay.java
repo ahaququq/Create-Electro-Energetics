@@ -6,6 +6,8 @@ import com.george_vi.electroenergetics.foundation.device.ElectricalDeviceBlock;
 import com.george_vi.electroenergetics.foundation.nodes.InWorldNode;
 import com.mojang.blaze3d.platform.Window;
 import com.simibubi.create.AllKeys;
+import com.simibubi.create.foundation.utility.CreateLang;
+import net.createmod.catnip.lang.LangBuilder;
 import net.createmod.catnip.theme.Color;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
@@ -124,7 +126,16 @@ public class ElectricPropertiesOverlay implements LayeredDraw.Layer {
             graphics.drawString(mc.font, nodeLabel, x - mc.font.width(nodeLabel) / 2, y, titleColor.getRGB());
 
             y += 12;
-            MutableComponent formattedVoltage = CEELang.formatVoltage(voltage.rmsVoltage).component();
+            LangBuilder langBuilder = CEELang.formatVoltage(voltage.rmsPeakClamped);
+
+            if (voltage.frequency > 4) {
+                langBuilder.text(" @ ")
+                        .add(CreateLang.number(voltage.frequency))
+                        .add(CEELang.translateDirect("generic.hertz"));
+            }
+
+            MutableComponent formattedVoltage = langBuilder.component();
+
             graphics.drawString(mc.font, formattedVoltage, x - mc.font.width(formattedVoltage) / 2, y, color.getRGB());
 
             if (invalidConnection || connectionTooLong) {

@@ -1,6 +1,8 @@
 package com.george_vi.electroenergetics;
 
 import com.george_vi.electroenergetics.content.electrical_panel.special_interaction.AnalogPanelAttachmentChangeStatePacket;
+import com.george_vi.electroenergetics.content.electrical_panel.special_interaction.SetMenuPanelAttachmentOptionsPacket;
+import com.george_vi.electroenergetics.content.electrical_panel.special_interaction.SetPanelAttachmentOptionsPacket;
 import com.george_vi.electroenergetics.content.energy_meter.ChangeEnergyMeterStatePacket;
 import com.george_vi.electroenergetics.content.fuse.ConfigureFusePacket;
 import com.george_vi.electroenergetics.content.railway_electrification.catenary.ClearCatenaryPacket;
@@ -8,6 +10,7 @@ import com.george_vi.electroenergetics.content.railway_electrification.catenary.
 import com.george_vi.electroenergetics.content.railway_electrification.gauges.SyncTrainGaugeDataPacket;
 import com.george_vi.electroenergetics.content.railway_electrification.sound_effects.ChangeTrainSoundTypePacket;
 import com.george_vi.electroenergetics.content.railway_electrification.sound_effects.UpdateElectricTrainSoundPacket;
+import com.george_vi.electroenergetics.content.transmission_distribution.transformer.ConfigureTransformerAttachmentPacket;
 import com.george_vi.electroenergetics.content.wire.*;
 import com.george_vi.electroenergetics.content.wire.interaction.InteractDetachedNodePacket;
 import com.george_vi.electroenergetics.content.wire.interaction.InteractWirePacket;
@@ -35,6 +38,7 @@ public enum CEEPackets implements BasePacketPayload.PacketTypeProvider {
     CHANGE_LENGTH(ChangeLengthWirePacket.class, ChangeLengthWirePacket.STREAM_CODEC),
     INTERACT_DETACHED_NODE(InteractDetachedNodePacket.class, InteractDetachedNodePacket.STREAM_CODEC),
     CHANGE_ENERGY_METER_STATE(ChangeEnergyMeterStatePacket.class, ChangeEnergyMeterStatePacket.STREAM_CODEC),
+    CONFIGURE_TRANSFORMER_ATTACHMENT(ConfigureTransformerAttachmentPacket.class, ConfigureTransformerAttachmentPacket.STREAM_CODEC),
     UPDATE_ELECTRIC_TRAIN_SOUND(UpdateElectricTrainSoundPacket.class, UpdateElectricTrainSoundPacket.STREAM_CODEC),
     CHANGE_TRAIN_SOUND_TYPE(ChangeTrainSoundTypePacket.class, ChangeTrainSoundTypePacket.STREAM_CODEC),
     SEND_SPARK(SendSparkPacket.class, SendSparkPacket.STREAM_CODEC),
@@ -45,6 +49,8 @@ public enum CEEPackets implements BasePacketPayload.PacketTypeProvider {
     SYNC_TRAIN_GAUGE_DATA(SyncTrainGaugeDataPacket.class, SyncTrainGaugeDataPacket.STREAM_CODEC),
     CONFIGURE_FUSE(ConfigureFusePacket.class, ConfigureFusePacket.STREAM_CODEC),
     ANALOG_LEVER_PANEL_CHANGE_STATE(AnalogPanelAttachmentChangeStatePacket.class, AnalogPanelAttachmentChangeStatePacket.STREAM_CODEC),
+    SET_MENU_PANEL_ATTACHMENT_OPTIONS(SetMenuPanelAttachmentOptionsPacket.class, SetMenuPanelAttachmentOptionsPacket.STREAM_CODEC),
+    SET_PANEL_ATTACHMENT_OPTIONS(SetPanelAttachmentOptionsPacket.class, SetPanelAttachmentOptionsPacket.STREAM_CODEC),
     ;
 
     private final CatnipPacketRegistry.PacketType<?> type;
