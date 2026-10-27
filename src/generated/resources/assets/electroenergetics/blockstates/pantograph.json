@@ -1,32 +1,182 @@
 {
   "variants": {
-    "double=false,facing=east": {
+    "double=false,facing=east,mode=manual": {
       "model": "electroenergetics:block/pantograph/block",
       "y": 90
     },
-    "double=false,facing=north": {
+    "double=false,facing=east,mode=motorized": {
+      "model": "electroenergetics:block/pantograph/block",
+      "y": 90
+    },
+    "double=false,facing=east,mode=none": {
+      "model": "electroenergetics:block/pantograph/block",
+      "y": 90
+    },
+    "double=false,facing=east,mode=redstone": {
+      "model": "electroenergetics:block/pantograph/block",
+      "y": 90
+    },
+    "double=false,facing=east,mode=remote": {
+      "model": "electroenergetics:block/pantograph/block",
+      "y": 90
+    },
+    "double=false,facing=east,mode=remote_redstone": {
+      "model": "electroenergetics:block/pantograph/block",
+      "y": 90
+    },
+    "double=false,facing=north,mode=manual": {
       "model": "electroenergetics:block/pantograph/block"
     },
-    "double=false,facing=south": {
+    "double=false,facing=north,mode=motorized": {
+      "model": "electroenergetics:block/pantograph/block"
+    },
+    "double=false,facing=north,mode=none": {
+      "model": "electroenergetics:block/pantograph/block"
+    },
+    "double=false,facing=north,mode=redstone": {
+      "model": "electroenergetics:block/pantograph/block"
+    },
+    "double=false,facing=north,mode=remote": {
+      "model": "electroenergetics:block/pantograph/block"
+    },
+    "double=false,facing=north,mode=remote_redstone": {
+      "model": "electroenergetics:block/pantograph/block"
+    },
+    "double=false,facing=south,mode=manual": {
       "model": "electroenergetics:block/pantograph/block",
       "y": 180
     },
-    "double=false,facing=west": {
+    "double=false,facing=south,mode=motorized": {
+      "model": "electroenergetics:block/pantograph/block",
+      "y": 180
+    },
+    "double=false,facing=south,mode=none": {
+      "model": "electroenergetics:block/pantograph/block",
+      "y": 180
+    },
+    "double=false,facing=south,mode=redstone": {
+      "model": "electroenergetics:block/pantograph/block",
+      "y": 180
+    },
+    "double=false,facing=south,mode=remote": {
+      "model": "electroenergetics:block/pantograph/block",
+      "y": 180
+    },
+    "double=false,facing=south,mode=remote_redstone": {
+      "model": "electroenergetics:block/pantograph/block",
+      "y": 180
+    },
+    "double=false,facing=west,mode=manual": {
       "model": "electroenergetics:block/pantograph/block",
       "y": 270
     },
-    "double=true,facing=east": {
+    "double=false,facing=west,mode=motorized": {
+      "model": "electroenergetics:block/pantograph/block",
+      "y": 270
+    },
+    "double=false,facing=west,mode=none": {
+      "model": "electroenergetics:block/pantograph/block",
+      "y": 270
+    },
+    "double=false,facing=west,mode=redstone": {
+      "model": "electroenergetics:block/pantograph/block",
+      "y": 270
+    },
+    "double=false,facing=west,mode=remote": {
+      "model": "electroenergetics:block/pantograph/block",
+      "y": 270
+    },
+    "double=false,facing=west,mode=remote_redstone": {
+      "model": "electroenergetics:block/pantograph/block",
+      "y": 270
+    },
+    "double=true,facing=east,mode=manual": {
       "model": "electroenergetics:block/pantograph/block_double",
       "y": 90
     },
-    "double=true,facing=north": {
+    "double=true,facing=east,mode=motorized": {
+      "model": "electroenergetics:block/pantograph/block_double",
+      "y": 90
+    },
+    "double=true,facing=east,mode=none": {
+      "model": "electroenergetics:block/pantograph/block_double",
+      "y": 90
+    },
+    "double=true,facing=east,mode=redstone": {
+      "model": "electroenergetics:block/pantograph/block_double",
+      "y": 90
+    },
+    "double=true,facing=east,mode=remote": {
+      "model": "electroenergetics:block/pantograph/block_double",
+      "y": 90
+    },
+    "double=true,facing=east,mode=remote_redstone": {
+      "model": "electroenergetics:block/pantograph/block_double",
+      "y": 90
+    },
+    "double=true,facing=north,mode=manual": {
       "model": "electroenergetics:block/pantograph/block_double"
     },
-    "double=true,facing=south": {
+    "double=true,facing=north,mode=motorized": {
+      "model": "electroenergetics:block/pantograph/block_double"
+    },
+    "double=true,facing=north,mode=none": {
+      "model": "electroenergetics:block/pantograph/block_double"
+    },
+    "double=true,facing=north,mode=redstone": {
+      "model": "electroenergetics:block/pantograph/block_double"
+    },
+    "double=true,facing=north,mode=remote": {
+      "model": "electroenergetics:block/pantograph/block_double"
+    },
+    "double=true,facing=north,mode=remote_redstone": {
+      "model": "electroenergetics:block/pantograph/block_double"
+    },
+    "double=true,facing=south,mode=manual": {
       "model": "electroenergetics:block/pantograph/block_double",
       "y": 180
     },
-    "double=true,facing=west": {
+    "double=true,facing=south,mode=motorized": {
+      "model": "electroenergetics:block/pantograph/block_double",
+      "y": 180
+    },
+    "double=true,facing=south,mode=none": {
+      "model": "electroenergetics:block/pantograph/block_double",
+      "y": 180
+    },
+    "double=true,facing=south,mode=redstone": {
+      "model": "electroenergetics:block/pantograph/block_double",
+      "y": 180
+    },
+    "double=true,facing=south,mode=remote": {
+      "model": "electroenergetics:block/pantograph/block_double",
+      "y": 180
+    },
+    "double=true,facing=south,mode=remote_redstone": {
+      "model": "electroenergetics:block/pantograph/block_double",
+      "y": 180
+    },
+    "double=true,facing=west,mode=manual": {
+      "model": "electroenergetics:block/pantograph/block_double",
+      "y": 270
+    },
+    "double=true,facing=west,mode=motorized": {
+      "model": "electroenergetics:block/pantograph/block_double",
+      "y": 270
+    },
+    "double=true,facing=west,mode=none": {
+      "model": "electroenergetics:block/pantograph/block_double",
+      "y": 270
+    },
+    "double=true,facing=west,mode=redstone": {
+      "model": "electroenergetics:block/pantograph/block_double",
+      "y": 270
+    },
+    "double=true,facing=west,mode=remote": {
+      "model": "electroenergetics:block/pantograph/block_double",
+      "y": 270
+    },
+    "double=true,facing=west,mode=remote_redstone": {
       "model": "electroenergetics:block/pantograph/block_double",
       "y": 270
     }

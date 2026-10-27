@@ -21,7 +21,8 @@ public class PantographRenderer extends SmartBlockEntityRenderer<PantographBlock
     @Override
     protected void renderSafe(PantographBlockEntity blockEntity, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         BlockState state = blockEntity.getBlockState();
-        float extensionState = Mth.lerp(partialTicks, blockEntity.prevExtensionState, blockEntity.currentExtensionState);
+
+		float extensionState = blockEntity.physicsController.interpolateRendering(partialTicks);
 
         int color = blockEntity.color.getTextureDiffuseColor();
 
@@ -56,8 +57,7 @@ public class PantographRenderer extends SmartBlockEntityRenderer<PantographBlock
 
             CachedBuffers.partial(CEEPartialModels.PANTOGRAPH_UPPER_ARMS_DOUBLE, state)
                     .center().rotateYDegrees(yRot).uncenter()
-                    .translate(0, 0.375, 0.5)
-                    .translate(0, armHingePosY, armHingePosX)
+                    .translate(0, armHingePosY + 0.375, armHingePosX + 0.5)
                     .rotateX((float) Mth.atan2(a, b) - Mth.HALF_PI)
                     .color(color)
                     .light(light)

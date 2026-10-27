@@ -6,29 +6,29 @@ import net.createmod.catnip.lang.Lang;
 import net.minecraft.util.StringRepresentable;
 
 public enum PantographControlMode implements StringRepresentable {
-    MANUAL, // Default, activated by hand
-    REDSTONE, // Redstone activated, accepts direct redstone power
-    REMOTE, // Remote link activated, has a frequency pair
-    MOTORIZED; // Electrically activated, has two more nodes
+    NONE("error"), // Needs to be calculated in the next tick
+    MANUAL("manual"), // Default, activated by hand
+    REDSTONE("redstone"), // Redstone activated, accepts direct redstone power
+    REMOTE("redstone.remote"), // Remote link activated, has a frequency pair
+    REMOTE_REDSTONE("redstone.remote_redstone"), // Both of the above
+    MOTORIZED("motorized"); // Electrically activated, has two more nodes
 
-    public boolean isManual() {
-        return this == MANUAL;
-    }
+    private final String translationName;
 
-    public boolean isRedstone() {
-        return this == REDSTONE;
-    }
+//    public boolean shouldObfuscate() { return this == NONE; } // Could be used for Modrinth build
+    public boolean shouldObfuscate() { return false; } // For debug
+	public boolean needsUpdating() { return this == NONE; }
+    public boolean isManual() { return this == MANUAL; }
+    public boolean isRedstone() { return this == REDSTONE || this == REMOTE_REDSTONE; }
+    public boolean isRemote() { return this == REMOTE || this == REMOTE_REDSTONE; }
+    public boolean isMotorized() { return this == MOTORIZED; }
 
-    public boolean isRemote() {
-        return this == REMOTE;
-    }
-
-    public boolean isMotorized() {
-        return this == MOTORIZED;
+    PantographControlMode(String translationName) {
+        this.translationName = translationName;
     }
 
     public NodeConfigurator getNodes() {
-        if (this == MOTORIZED)
+        if (isMotorized())
             return CEENodeConfigurations.PANTOGRAPH_MOTORIZED;
         else
             return CEENodeConfigurations.PANTOGRAPH_MANUAL;
@@ -38,4 +38,8 @@ public enum PantographControlMode implements StringRepresentable {
     public String getSerializedName() {
         return Lang.asId(name());
     }
+
+	public String getTranslationName() {
+		return translationName;
+	}
 }

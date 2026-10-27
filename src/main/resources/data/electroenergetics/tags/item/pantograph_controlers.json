@@ -1,0 +1,7 @@
+{
+  "values": [
+    "#electroenergetics:pantograph_controler/motorized",
+    "#electroenergetics:pantograph_controler/redstone",
+    "#electroenergetics:pantograph_controler/remote"
+  ]
+}

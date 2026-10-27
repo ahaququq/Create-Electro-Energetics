@@ -1,4 +1,4 @@
-// 1.21.1	2026-07-11T12:51:17.860039113	Registrate Provider for electroenergetics [Registries, Data Maps, Recipes, Advancements, Loot Tables, Tags (blocks), Tags (enchantments), Tags (items), Tags (fluids), Tags (entity_types), generic_server_provider, Blockstates, Item models, Lang (en_us/en_ud), generic_client_provider]
+// 1.21.1	2026-10-24T11:14:23.993507587	Registrate Provider for electroenergetics [Registries, Data Maps, Recipes, Advancements, Loot Tables, Tags (blocks), Tags (enchantments), Tags (items), Tags (fluids), Tags (entity_types), generic_server_provider, Blockstates, Item models, Lang (en_us/en_ud), generic_client_provider]
 efaff624fae8f426c8927b933899a261b68f7685 assets/electroenergetics/blockstates/accumulator.json
 bc7e544079464f9fb40950d4499967da027b352f assets/electroenergetics/blockstates/alternator_brushes.json
 6b72c8deefc1f25685fbb695dfa33f40a78fa5a3 assets/electroenergetics/blockstates/alternator_rotor.json
@@ -60,7 +60,7 @@ ff2217e7f2b557f8e1dff0ce9bf74c9a801ac14e assets/electroenergetics/blockstates/li
 cd56d603e734351043ea45bae55b0ad6cc615490 assets/electroenergetics/blockstates/momentary_switch.json
 1c1079b2eac53417f8e48d40310725f7d227de92 assets/electroenergetics/blockstates/orange_electric_motor.json
 bb6f86e573a0cdea7084ea32551909120b27df96 assets/electroenergetics/blockstates/orange_electrical_panel.json
-9488c3b67a62aed0016025ad18628271963226de assets/electroenergetics/blockstates/pantograph.json
+945cca6a04901a1b6d4f966c78f43c563f105071 assets/electroenergetics/blockstates/pantograph.json
 189cb8d85808b1cb3c92197e58744492e3c3c3f7 assets/electroenergetics/blockstates/pink_electric_motor.json
 2d0b80919124d1da1bd2882620af396721844192 assets/electroenergetics/blockstates/pink_electrical_panel.json
 cd785c2540f55728859d681c84b737737bfaec69 assets/electroenergetics/blockstates/plant_oil.json
@@ -95,8 +95,8 @@ f407a37a266195fcfc499e4b24ffdb23655d6ed6 assets/electroenergetics/blockstates/wh
 653b26ba9220e3d382341409d1077886f5dad212 assets/electroenergetics/blockstates/white_electrical_panel.json
 08773c07f26e18921d02a6d72d8e5009381faebe assets/electroenergetics/blockstates/yellow_electric_motor.json
 3ee703aa50d72c35efc595a82426b8b342a85b25 assets/electroenergetics/blockstates/yellow_electrical_panel.json
-4ce78c6b0362381ea711c3561ce18c7319fce215 assets/electroenergetics/lang/en_ud.json
-11e6ddca11b6d859deea26dd89787b1ae4ad208c assets/electroenergetics/lang/en_us.json
+21cde8ddae992fea7e4536a72d6b6d179c03bf63 assets/electroenergetics/lang/en_ud.json
+83e6390cf01e820898e329ef075c7aca47efb2d2 assets/electroenergetics/lang/en_us.json
 706ea17778dccc4e51f059c39b5c730336b598c6 assets/electroenergetics/models/block/black_electric_motor.json
 c4d97346cc2c5227ea79460ab456d978989a4917 assets/electroenergetics/models/block/black_electric_motor_roll.json
 1492e0e72ff03497c687dc88f5187eedba553d56 assets/electroenergetics/models/block/black_electrical_panel.json

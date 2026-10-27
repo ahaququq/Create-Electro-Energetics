@@ -84,6 +84,18 @@ public class CEETags {
     // This tag is used to make items 'inspect' nodes.
     public static final TagKey<Item> SEE_NODE_DATA = TagKey.create(Registries.ITEM, CreateElectroEnergetics.rl("see_node_data"));
 
+    // This tag defines which items can be used as motors to create a motorized pantograph
+    public static final TagKey<Item> PANTOGRAPH_MOTOR = TagKey.create(Registries.ITEM, CreateElectroEnergetics.rl("pantograph_controler/motorized"));
+
+    // This tag defines which items can be used to create a redstone controlled pantograph
+    public static final TagKey<Item> PANTOGRAPH_REDSTONE = TagKey.create(Registries.ITEM, CreateElectroEnergetics.rl("pantograph_controler/redstone"));
+
+    // This tag defines which items can be used to create a wireless redstone controlled pantograph
+    public static final TagKey<Item> PANTOGRAPH_REMOTE = TagKey.create(Registries.ITEM, CreateElectroEnergetics.rl("pantograph_controler/remote"));
+
+    // All 3 above
+    public static final TagKey<Item> PANTOGRAPH_ANY = TagKey.create(Registries.ITEM, CreateElectroEnergetics.rl("pantograph_controlers"));
+
     // Tags for sable compatibility:
     public static final TagKey<Block> SUPER_LIGHT = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("sable", "super_light"));
     public static final TagKey<Block> LIGHT = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("sable", "light"));

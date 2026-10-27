@@ -1,8 +1,11 @@
 package com.george_vi.electroenergetics.content.railway_electrification.pantograph;
 
+import com.george_vi.electroenergetics.CEETags;
+import com.george_vi.electroenergetics.CreateElectroEnergetics;
 import com.george_vi.electroenergetics.client.WireRenderer;
 import com.george_vi.electroenergetics.config.CEEConfigs;
 import com.george_vi.electroenergetics.content.railway_electrification.catenary.CatenaryConnection;
+import com.george_vi.electroenergetics.foundation.CEELang;
 import com.george_vi.electroenergetics.foundation.nodes.AttachedNode;
 import com.george_vi.electroenergetics.foundation.nodes.InWorldNode;
 import com.george_vi.electroenergetics.foundation.nodes.InWorldNodeConnection;
@@ -10,39 +13,67 @@ import com.george_vi.electroenergetics.simulation.infrastructure.ConnectionEntry
 import com.george_vi.electroenergetics.simulation.infrastructure.InfrastructureSavedData;
 import com.george_vi.electroenergetics.simulation.infrastructure.WireData;
 import com.george_vi.electroenergetics.simulation.infrastructure.WireSimulationState;
+import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.content.redstone.link.RedstoneLinkNetworkHandler;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
+import com.simibubi.create.foundation.utility.CreateLang;
 import dev.ryanhcode.sable.companion.SableCompanion;
 import dev.ryanhcode.sable.companion.SubLevelAccess;
 import net.createmod.catnip.data.Pair;
+import net.createmod.catnip.lang.Lang;
+import net.createmod.catnip.lang.LangBuilder;
 import net.createmod.catnip.math.VecHelper;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.core.SectionPos;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.*;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.Clearable;
+import net.minecraft.world.Container;
+import net.minecraft.world.Containers;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.UnaryOperator;
 
 import static net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING;
 
-public class PantographBlockEntity extends SmartBlockEntity {
-    public float prevExtensionState = 0;
-    public float currentExtensionState = 0;
-    public float targetExtensionState = 0.85f;
-    public boolean extended = true;
+public class PantographBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, Clearable, Container {
+    private static final Logger log = LoggerFactory.getLogger(PantographBlockEntity.class);
+    public double power = 0;
+    public SpringMovementState springState = SpringMovementState.NONE;
+    public Vec3 previousSublevelVelocity = Vec3.ZERO;
+    private final ArrayList<ItemStack> inventory = new ArrayList<>();
+
+//    public boolean ownsItem = true;
+//    public boolean recessive = false;
+
+    final public PantographPhysicsController physicsController = new PantographPhysicsController(
+            level, getBlockState().getValue(PantographBlock.DOUBLE),
+            getBlockState().getValue(PantographBlock.FACING),
+            worldPosition, null, true
+    );
+
+//    public boolean extended = true;
     public DyeColor color = DyeColor.WHITE;
 
     AttachedNode attachedNode;
@@ -59,46 +90,197 @@ public class PantographBlockEntity extends SmartBlockEntity {
     }
 
     @Override
-    public void tick() {
-        super.tick();
-        prevExtensionState = currentExtensionState;
-        currentExtensionState = currentExtensionState < targetExtensionState ? Math.min(targetExtensionState, currentExtensionState + 0.05f) : Math.max(targetExtensionState, currentExtensionState - 0.05f);
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        if (physicsController == null) return false;
 
-        if (level.isClientSide && currentExtensionState == targetExtensionState && prevExtensionState != currentExtensionState)
-            level.playLocalSound(worldPosition.getX() + 0.5, worldPosition.getY() + 0.25, worldPosition.getZ() + 0.5, SoundEvents.CHAIN_HIT, SoundSource.NEUTRAL, 0.1f, 1f, false);
+        CEELang
+                .translate("gui.goggles.pantograph_info")
+                .forGoggles(tooltip);
 
-        if (!extended) {
-            targetExtensionState = 0;
-            disconnect();
-            return;
+        CEELang
+                .translate("gui.goggles.pantograph.control_mode")
+                .style(ChatFormatting.GRAY)
+                .forGoggles(tooltip);
+
+        PantographControlMode controlMode = getBlockState().getValue(PantographBlock.CONTROL_MODE);
+        LangBuilder controlModeText = CEELang
+                .translate("pantograph.control_mode." + controlMode.getTranslationName())
+                .style(ChatFormatting.AQUA);
+        if (controlMode.shouldObfuscate()) controlModeText = controlModeText.style(ChatFormatting.OBFUSCATED);
+        controlModeText
+                .forGoggles(tooltip, 1);
+
+        CEELang
+                .translate("gui.goggles.pantograph.spring_position")
+                .style(ChatFormatting.GRAY)
+                .forGoggles(tooltip);
+
+        CreateLang
+                .number(Mth.map(
+                        physicsController.springPosition,
+                        physicsController.getLowerLimit(),
+                        physicsController.getUpperLimit(),
+                        0,
+                        100
+                        ))
+                .text("%")
+                .style(ChatFormatting.AQUA)
+                .forGoggles(tooltip, 1);
+
+        CEELang
+                .translate("gui.goggles.pantograph.arm_position")
+                .style(ChatFormatting.GRAY)
+                .forGoggles(tooltip);
+
+        CreateLang
+                .number(Mth.map(
+                        physicsController.length,
+                        physicsController.getLowerLimit(),
+                        physicsController.getUpperLimit(),
+                        0,
+                        100
+                        ))
+                .text("%")
+                .style(ChatFormatting.AQUA)
+                .forGoggles(tooltip, 1);
+
+        if (physicsController.distanceFromWire() != Float.POSITIVE_INFINITY) {
+            CEELang
+                    .translate("gui.goggles.pantograph.wire_distance")
+                    .style(ChatFormatting.GRAY)
+                    .forGoggles(tooltip);
+
+            CreateLang
+                    .number(physicsController.distanceFromWire())
+                    .add(CEELang.translate("generic.meter"))
+                    .style(ChatFormatting.AQUA)
+                    .forGoggles(tooltip, 1);
         }
 
+		if (!controlMode.isMotorized() || springState == SpringMovementState.NONE) return true;
+
+//            CEELang
+//                    .translate("gui.goggles.pantograph.control_stats")
+//                    .style(ChatFormatting.GRAY)
+//                    .forGoggles(tooltip);
+
+		CEELang
+				.translate("gui.goggles.energy_consumption")
+				.style(ChatFormatting.GRAY)
+				.forGoggles(tooltip);
+
+		CEELang.builder()
+				.add(CEELang.formatPower(power))
+				.style(ChatFormatting.AQUA)
+				.space()
+				.add(CEELang
+						.translate("gui.goggles.while_" + springState.getSerializedName())
+						.style(ChatFormatting.DARK_GRAY))
+				.forGoggles(tooltip, 1);
+
+		return true;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+//        if (physicsController == null) {
+//            physicsController =
+//        }
+
+        if (getBlockState().getValue(PantographBlock.CONTROL_MODE).needsUpdating()) {
+            becomeDouble();
+            updateControlMode();
+        }
+
+        physicsController.level = level;
+        physicsController.isDouble = getBlockState().getValue(PantographBlock.DOUBLE);
+        physicsController.facing = getBlockState().getValue(PantographBlock.FACING);
+        physicsController.localPos = worldPosition;
+
+        level.getProfiler().push("Pantograph.tick");
+
         SubLevelAccess subLevelAccess = SableCompanion.INSTANCE.getContaining(level, worldPosition);
+        Vec3 velocity = SableCompanion.INSTANCE.getVelocity(level, (Position) worldPosition.getCenter());
+        Vec3 acceleration = previousSublevelVelocity.subtract(velocity);
+        previousSublevelVelocity = velocity;
+        float gravityCoefficient = -1;
 
         if (subLevelAccess == null) {
             if (level.isClientSide)
-                handleOnClient(p -> p, p -> p);
+                handleOnClient(p -> p, p -> p, Vec3.ZERO, gravityCoefficient);
             else
-                handleOnServer(p -> p, p -> p);
+                handleOnServer(p -> p, p -> p, Vec3.ZERO, gravityCoefficient);
         } else {
+            gravityCoefficient = (float) subLevelAccess.logicalPose().transformNormalInverse(new Vec3(0, -1, 0)).y;
             if (level.isClientSide)
-                handleOnClient(subLevelAccess.logicalPose()::transformPosition, subLevelAccess.logicalPose()::transformPositionInverse);
+                handleOnClient(
+                        subLevelAccess.logicalPose()::transformPosition,
+                        subLevelAccess.logicalPose()::transformPositionInverse,
+                        subLevelAccess.logicalPose().transformNormalInverse(acceleration),
+                        gravityCoefficient
+                );
             else
-                handleOnServer(subLevelAccess.logicalPose()::transformPosition, subLevelAccess.logicalPose()::transformPositionInverse);
+                handleOnServer(
+                        subLevelAccess.logicalPose()::transformPosition,
+                        subLevelAccess.logicalPose()::transformPositionInverse,
+                        subLevelAccess.logicalPose().transformNormalInverse(acceleration),
+                        gravityCoefficient
+                );
         }
+
+        level.getProfiler().pop();
+        return;
     }
 
-    private void handleOnClient(UnaryOperator<Vec3> positionTransform, UnaryOperator<Vec3> inversePositionTransform) {
-        boolean isDouble = getBlockState().getValue(PantographBlock.DOUBLE);
-        double pantographX = getBlockState().getValue(PantographBlock.FACING).getAxisDirection() == Direction.AxisDirection.POSITIVE ? 0.25 : 0.75;
+	private void becomeDouble() {
+        BlockEntity other = level.getBlockEntity(worldPosition.relative(getBlockState().getValue(PantographBlock.FACING).getOpposite()));
+		if (other instanceof PantographBlockEntity be) {
+			if (wouldBeRecessive()) {
+				CreateElectroEnergetics.LOGGER.info("becomeDouble from {} for {}", getBlockPos(), other.getBlockPos());
+				color = be.color;
+				for (int i = 0; i < getContainerSize(); i++) {
+					ItemStack item = removeItemNoUpdate(0);
+					if (be.canPlaceItem(be.lastSlot(), item)) {
+						be.setItem(be.lastSlot(), item);
+					} else if (level instanceof Level l) {
+						Containers.dropItemStack(l, getBlockPos().getX(), getBlockPos().getY(), getBlockPos().getZ(), item);
+					}
+				}
+				clearContent();
+			} else if (be.wouldBeRecessive()) {
+				CreateElectroEnergetics.LOGGER.info("becomeDouble from {} for {}", getBlockPos(), other.getBlockPos());
+				be.color = color;
+				for (int i = 0; i < be.getContainerSize(); i++) {
+					ItemStack item = be.removeItemNoUpdate(0);
+					if (canPlaceItem(lastSlot(), item)) {
+						setItem(lastSlot(), item);
+					} else if (level instanceof Level l) {
+						Containers.dropItemStack(l, be.getBlockPos().getX(), be.getBlockPos().getY(), be.getBlockPos().getZ(), item);
+					}
+				}
+				be.clearContent();
+			}
+		}
+	}
+
+    private void handleOnClient(UnaryOperator<Vec3> positionTransform, UnaryOperator<Vec3> inversePositionTransform, Vec3 acceleration, float gravityCoefficient) {
+        physicsController.globalPos = positionTransform.apply(worldPosition.getCenter());
+
+        BlockState blockState = getBlockState();
+        boolean isDouble = blockState.getValue(PantographBlock.DOUBLE);
+        double pantographX = blockState.getValue(PantographBlock.FACING).getAxisDirection() == Direction.AxisDirection.POSITIVE ? 0.25 : 0.75;
         if (isDouble)
-            pantographX = getBlockState().getValue(PantographBlock.FACING).getAxisDirection() == Direction.AxisDirection.POSITIVE ? 0 : 1;
-        Direction.Axis axis = getBlockState().getValue(FACING).getAxis();
+            pantographX = blockState.getValue(PantographBlock.FACING).getAxisDirection() == Direction.AxisDirection.POSITIVE ? 0 : 1;
+        Direction.Axis axis = blockState.getValue(FACING).getAxis();
         float halfPantoReach = 1.625f;
 
         Vec3 pantographPos = new Vec3(axis == Direction.Axis.X ? pantographX : 0.5, halfPantoReach, axis == Direction.Axis.Z ? pantographX : 0.5).add(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
 
         Vec3 connectionPoint = null;
+
+        level.getProfiler().push("searchForWires");
 
         for (Pair<InWorldNodeConnection, WireData> connection : WireRenderer.WIRE_CONNECTIONS) {
             if (connection.getSecond().wireType().getSag() != 0)
@@ -113,9 +295,8 @@ public class PantographBlockEntity extends SmartBlockEntity {
             float progress = closestPointOnWire(start, end, pantographPos);
             Vec3 cp = checkCatenary(start, end, pantographPos, progress, halfPantoReach);
             if (cp != null) {
-                if (connectionPoint == null || connectionPoint.y > cp.y) {
-                    connectionPoint = cp.add(0, -halfThickness + 0.015f, 0);
-                }
+                if (connectionPoint == null || connectionPoint.y > cp.y)
+					connectionPoint = cp.add(0, -halfThickness + 0.015f, 0);
             }
         }
 
@@ -134,6 +315,7 @@ public class PantographBlockEntity extends SmartBlockEntity {
             }
         }
 
+        level.getProfiler().popPush("debug");
 
         if (CEEConfigs.client().debugPantographRange.get())
             for (float x = -3; x < 3; x += 0.3f) {
@@ -148,28 +330,32 @@ public class PantographBlockEntity extends SmartBlockEntity {
                 }
             }
 
-        if (connectionPoint != null) {
-            float lo = 0;
-            float hi = 2.7f;
-            for (int i = 0; i < 20; i++) {
-                float m1 = lo + (hi - lo) / 3;
-                float m2 = hi - (hi - lo) / 3;
-                if (Math.abs(getConnectorPos(m1).y - connectionPoint.y) < Math.abs(getConnectorPos(m2).y - connectionPoint.y))
-                    hi = m2;
-                else
-                    lo = m1;
-            }
-            float newExtensionState = (lo + hi) / 2;
-            if (targetExtensionState >= currentExtensionState && targetExtensionState != 0)
-                currentExtensionState = newExtensionState;
+        level.getProfiler().pop();
 
-            targetExtensionState = newExtensionState;
+        if (connectionPoint != null) {
+//            level.addParticle(ParticleTypes.ELECTRIC_SPARK, connectionPoint.x, connectionPoint.y, connectionPoint.z, 0, 0, 0);
+
+            Vec3 contactCenter = worldPosition.getBottomCenter().with(Direction.Axis.Y, connectionPoint.y);
+            contactCenter = contactCenter.relative(blockState.getValue(PantographBlock.FACING), isDouble ? -0.5 : -4/16.0);
+            float offset = (float) (connectionPoint.distanceTo(contactCenter));
+
+            float wireHeight = (float) (connectionPoint.y - worldPosition.getBottomCenter().y);
+            if (offset > 1) wireHeight += (offset - 1) * 0.5f;
+
+            physicsController.updateExtension(
+                    1/20f,
+                    wireHeight,
+                    (float) acceleration.y,
+                    gravityCoefficient,
+                    isRecessive()
+            );
         } else {
-            targetExtensionState = 1f;
+            physicsController.updateExtension(1/20f, 100, (float) acceleration.y, gravityCoefficient, isRecessive());
         }
     }
 
-    private void handleOnServer(UnaryOperator<Vec3> positionTransform, UnaryOperator<Vec3> inversePositionTransform) {
+    private void handleOnServer(UnaryOperator<Vec3> positionTransform, UnaryOperator<Vec3> inversePositionTransform, Vec3 acceleration, float gravityCoefficient) {
+        physicsController.globalPos = positionTransform.apply(worldPosition.getCenter());
         if (!(level instanceof ServerLevel serverLevel))
             return;
         InfrastructureSavedData sd = InfrastructureSavedData.load(serverLevel);
@@ -187,6 +373,7 @@ public class PantographBlockEntity extends SmartBlockEntity {
         InWorldNodeConnection connectedConnection = null;
         float connectionProgress = 0;
 
+        level.getProfiler().push("searchForWires");
 
         Vec3 inWorldPos = positionTransform.apply(pantographPos);
         long sectionPos = SectionPos.asLong(Mth.floor(inWorldPos.x) >> 4, Mth.floor(inWorldPos.y) >> 4, Mth.floor(inWorldPos.z) >> 4);
@@ -230,7 +417,22 @@ public class PantographBlockEntity extends SmartBlockEntity {
             }
         }
 
+        level.getProfiler().pop();
+
         if (connectionPoint != null) {
+            Vec3 contactCenter = worldPosition.getBottomCenter().with(Direction.Axis.Y, connectionPoint.y);
+            contactCenter = contactCenter.relative(getBlockState().getValue(PantographBlock.FACING), isDouble ? -0.5 : -4/16.0);
+            float offset = (float) (connectionPoint.distanceTo(contactCenter));
+
+            float wireHeight = (float) (connectionPoint.y - worldPosition.getBottomCenter().y);
+            if (offset > 1) wireHeight += (offset - 1) * 0.5f;
+
+            physicsController.updateExtension(
+                    1/20f,
+                    wireHeight,
+                    (float) acceleration.y,
+                    gravityCoefficient,
+                    isRecessive());
             if (handle == null || !handle.valid())
                 handle = sd.wireSimulationState.createHandle("Pantograph-"+worldPosition.toShortString());
 
@@ -248,8 +450,8 @@ public class PantographBlockEntity extends SmartBlockEntity {
             lastConnection = connectedConnection;
 
         } else {
+            physicsController.updateExtension(1/20f, 100, (float) acceleration.y, gravityCoefficient, isRecessive());
             disconnect();
-            targetExtensionState = 1f;
         }
     }
 
@@ -263,36 +465,6 @@ public class PantographBlockEntity extends SmartBlockEntity {
             handle = null;
             lastConnection = null;
         }
-    }
-
-    Vec3 getConnectorPos(float extensionState) {
-        Direction.Axis axis = getBlockState().getValue(FACING).getAxis();
-        if (getBlockState().getValue(PantographBlock.DOUBLE)) {
-            float lowerArmRadians = (-90 + extensionState * 27) * Mth.DEG_TO_RAD;
-            double armHingePosY = Mth.cos(lowerArmRadians) * 1.5 + 0.5;
-            double armHingePosX = Mth.sin(lowerArmRadians) * 1.5;
-
-            float b = (float) (-0.4f - Math.abs(armHingePosX));
-            float a = Mth.sqrt(-b * b + 2f * 2f);
-
-            double pantographX = getBlockState().getValue(PantographBlock.FACING).getAxisDirection() == Direction.AxisDirection.POSITIVE ? 0 : 1;
-
-            Vec3 connectorPlatePos = new Vec3(axis == Direction.Axis.X ? pantographX : 0.5f, 0.1875 + a + armHingePosY, axis == Direction.Axis.Z ? pantographX : 0.5f);
-            connectorPlatePos = connectorPlatePos.add(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
-            return connectorPlatePos;
-        }
-
-        float lowerArmRadians = (-75 + extensionState * 30) * Mth.DEG_TO_RAD;
-
-        double armHingePosY = Mth.cos(lowerArmRadians) * 1.875 + 0.5;
-        double armHingePosX = Mth.sin(lowerArmRadians) * 1.875;
-
-        float upperArmRadians = (89 - extensionState * 50) * Mth.DEG_TO_RAD;
-        double pantographX = getBlockState().getValue(PantographBlock.FACING).getAxisDirection() == Direction.AxisDirection.POSITIVE ? 0.25 : 0.75;
-        Vec3 connectorPlatePos = new Vec3((axis == Direction.Axis.X ? pantographX : 0.5), armHingePosY, armHingePosX + (axis == Direction.Axis.Z ? pantographX : 0.5))
-                .add(0, Mth.cos(upperArmRadians) * 1.9, Mth.sin(upperArmRadians) * 1.9);
-        connectorPlatePos = connectorPlatePos.add(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
-        return connectorPlatePos;
     }
 
     float closestPointOnWire(Vec3 start, Vec3 end, Vec3 checker) {
@@ -328,25 +500,215 @@ public class PantographBlockEntity extends SmartBlockEntity {
     @Override
     protected void read(CompoundTag tag, HolderLookup.Provider registries, boolean clientPacket) {
         super.read(tag, registries, clientPacket);
+        power = tag.getDouble("power");
+        springState = SpringMovementState.byName(tag.getString("springState"), SpringMovementState.NONE);
         color = DyeColor.byName(tag.getString("Color"), DyeColor.WHITE);
-        targetExtensionState = tag.getFloat("TargetExtensionState");
-        currentExtensionState = tag.getFloat("ExtensionState");
-        prevExtensionState = tag.getFloat("PrevExtensionState");
-        extended = tag.getBoolean("Extended");
+
+        ListTag inventoryListTag = tag.getList("inventory", Tag.TAG_COMPOUND);
+
+        inventory.clear();
+
+        if (!inventoryListTag.isEmpty()) {
+            inventory.ensureCapacity(inventoryListTag.size());
+            inventory.addAll(
+                inventoryListTag.stream()
+                    .map(tag1 -> {
+						if (tag1.getType() == CompoundTag.TYPE)
+				            return ItemStack.parseOptional(registries, ((CompoundTag) tag1));
+						return ItemStack.EMPTY;
+					})
+                    .filter(itemStack -> !itemStack.isEmpty())
+                    .toList()
+            );
+        }
+
+        physicsController.deserializeNBT(registries, tag.getCompound("physics"));
     }
 
     @Override
     protected void write(CompoundTag tag, HolderLookup.Provider registries, boolean clientPacket) {
         super.write(tag, registries, clientPacket);
+        tag.putDouble("power", power);
+        tag.putString("springState", springState.getSerializedName());
         tag.putString("Color", color.getSerializedName());
-        tag.putFloat("TargetExtensionState", targetExtensionState);
-        tag.putFloat("ExtensionState", currentExtensionState);
-        tag.putFloat("PrevExtensionState", prevExtensionState);
-        tag.putBoolean("Extended", extended);
+
+        ListTag inventoryList = new ListTag(inventory.size());
+
+        inventory.removeIf(ItemStack::isEmpty);
+
+        for (ItemStack itemStack : inventory) {
+            inventoryList.add(itemStack.save(registries));
+        }
+
+		tag.put("inventory", inventoryList);
+        tag.put("physics", physicsController.serializeNBT(registries));
     }
 
     @Override
     protected AABB createRenderBoundingBox() {
         return super.createRenderBoundingBox().inflate(3);
+    }
+
+    @Override
+    public void clearContent() {
+        inventory.clear();
+        updateControlMode();
+    }
+
+    @Override
+    public int getContainerSize() {
+        return inventory.size() + 1;
+    }
+
+    public int lastSlot() {
+        return inventory.size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return inventory.isEmpty();
+    }
+
+    @Override
+    public ItemStack getItem(int slot) {
+        if (slot == inventory.size()) return ItemStack.EMPTY;
+        return inventory.get(slot);
+    }
+
+    @Override
+    public ItemStack removeItem(int slot, int amount) {
+        if (slot == inventory.size()) return ItemStack.EMPTY;
+        ItemStack itemStack = inventory.get(slot);
+        if (itemStack.getCount() == amount) inventory.remove(slot);
+        updateControlMode();
+        return itemStack.split(amount);
+    }
+
+    @Override
+    public ItemStack removeItemNoUpdate(int slot) {
+        if (slot == inventory.size()) return ItemStack.EMPTY;
+        ItemStack itemStack = getItem(slot).copy();
+        inventory.remove(slot);
+//        updateControlMode();
+        return itemStack;
+    }
+
+    @Override
+    public void setItem(int slot, ItemStack itemStack) {
+        if (itemStack.isEmpty()) {
+            inventory.remove(slot);
+			return;
+        }
+        if (slot < inventory.size()) inventory.set(slot, itemStack);
+        else inventory.add(itemStack);
+        updateControlMode();
+    }
+
+    public void updateControlMode() {
+        if (level != null)
+            level.setBlockAndUpdate(worldPosition, getBlockState().setValue(PantographBlock.CONTROL_MODE, controlModeFromItems()));
+    }
+
+    @Override
+    public boolean stillValid(Player player) {
+        return false;
+    }
+
+    @Override
+    public boolean canPlaceItem(int slot, ItemStack stack) {
+        // If empty, allow any control item. If not, allow combining redstone and remote
+
+        if (
+            inventory.isEmpty() && slot == 0 && (
+                stack.is(CEETags.PANTOGRAPH_MOTOR) ||
+                stack.is(CEETags.PANTOGRAPH_REDSTONE) ||
+                stack.is(CEETags.PANTOGRAPH_REMOTE)
+            )
+        ) return true;
+
+        if (inventory.size() == 1 && slot == 1) {
+            if (
+                inventory.getFirst().is(CEETags.PANTOGRAPH_REMOTE) &&
+                stack.is(CEETags.PANTOGRAPH_REDSTONE)
+            ) return true;
+
+			return
+                inventory.getFirst().is(CEETags.PANTOGRAPH_REDSTONE) &&
+                stack.is(CEETags.PANTOGRAPH_REMOTE);
+        }
+        return false;
+    }
+
+    public void giveBackItems(Player player) {
+        for (ItemStack itemStack : inventory) {
+            player.getInventory().placeItemBackInInventory(itemStack);
+        }
+        clearContent();
+    }
+
+    public PantographControlMode controlModeFromItems() {
+        PantographBlockEntity targetInventory; // If recessive, control mode depends on the other one
+		if (
+            isRecessive() &&
+            level.getBlockEntity(
+                    getBlockPos().relative(getBlockState().getValue(PantographBlock.FACING).getOpposite())
+            ) instanceof PantographBlockEntity be1
+        ) targetInventory = be1;
+		else targetInventory = this;
+
+		ArrayList<ItemStack> inventory1 = targetInventory.inventory;
+        if (inventory1.isEmpty()) return PantographControlMode.MANUAL;
+
+        if (
+            inventory1.size() == 2 && (
+                (inventory1.getFirst().is(CEETags.PANTOGRAPH_REMOTE) && inventory1.get(1).is(CEETags.PANTOGRAPH_REDSTONE)) ||
+                (inventory1.getFirst().is(CEETags.PANTOGRAPH_REDSTONE) && inventory1.get(1).is(CEETags.PANTOGRAPH_REMOTE))
+            )
+        ) return PantographControlMode.REMOTE_REDSTONE;
+
+        if (inventory1.size() != 1) return PantographControlMode.MANUAL;
+        if (inventory1.getFirst().is(CEETags.PANTOGRAPH_MOTOR)) return PantographControlMode.MOTORIZED;
+
+        if (inventory1.getFirst().is(CEETags.PANTOGRAPH_REMOTE)) return PantographControlMode.REMOTE;
+        if (inventory1.getFirst().is(CEETags.PANTOGRAPH_REDSTONE)) return PantographControlMode.REDSTONE;
+
+        return PantographControlMode.MANUAL;
+    }
+
+    public boolean isRecessive() {
+        BlockState state = getBlockState();
+        return state.getValue(PantographBlock.DOUBLE) && (state.getValue(PantographBlock.FACING).get2DDataValue() & 2) == 0;
+    }
+
+    public boolean wouldBeRecessive() {
+        BlockState state = getBlockState();
+        return (state.getValue(PantographBlock.FACING).get2DDataValue() & 2) == 0;
+    }
+
+    public boolean isDominant() {
+        BlockState state = getBlockState();
+        return state.getValue(PantographBlock.DOUBLE) && (state.getValue(PantographBlock.FACING).get2DDataValue() & 2) != 0;
+    }
+
+
+
+    public enum SpringMovementState implements StringRepresentable {
+        NONE, // Not powered
+        IDLE, // Powered, but at endpoint
+        STALLED, // Powered, but doesn't have enough power to move
+        MOVING; // Powered and moving
+
+        /// Based on [DyeColor]
+        public static final EnumCodec<SpringMovementState> CODEC = StringRepresentable.fromEnum(SpringMovementState::values);
+
+        @Override
+        public String getSerializedName() {
+            return Lang.asId(name());
+        }
+
+        public static SpringMovementState byName(String translationKey, @Nullable SpringMovementState fallback) {
+            SpringMovementState state = CODEC.byName(translationKey);
+            return state != null ? state : fallback;
+        }
     }
 }

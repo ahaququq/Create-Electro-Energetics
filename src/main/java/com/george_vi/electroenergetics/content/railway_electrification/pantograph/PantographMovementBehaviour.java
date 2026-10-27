@@ -22,8 +22,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.state.BlockState;
@@ -35,11 +34,6 @@ public class PantographMovementBehaviour implements MovementBehaviour {
 
     @Override
     public void tick(MovementContext context) {
-        float targetExtensionState = context.blockEntityData.getFloat("ExtensionState");
-        float currentExtensionState = context.data.getFloat("CurrentExtensionState");
-        float prevExtensionState = currentExtensionState;
-        currentExtensionState = currentExtensionState < targetExtensionState ? Math.min(targetExtensionState, currentExtensionState + 0.05f) : Math.max(targetExtensionState, currentExtensionState - 0.05f);
-
         boolean isDouble = context.state.getValue(PantographBlock.DOUBLE);
 
         if (!(context.contraption.entity instanceof CarriageContraptionEntity e))
@@ -54,22 +48,35 @@ public class PantographMovementBehaviour implements MovementBehaviour {
         if (context.disabled) {
             if (!prevDisabled)
                 ((IPantographList) e.getCarriage()).changePantographState(context.localPos, false);
-            targetExtensionState = 0f;
         } else {
             if (prevDisabled) {
                 ((IPantographList) e.getCarriage()).changePantographState(context.localPos, true);
-                targetExtensionState = 0.75f;
             }
         }
 
-        if (context.world.isClientSide && currentExtensionState == targetExtensionState && prevExtensionState != currentExtensionState)
-            context.world.playLocalSound(context.position.x, context.position.y, context.position.z, SoundEvents.CHAIN_HIT, SoundSource.NEUTRAL, 0.1f, 1f, false);
+        PantographPhysicsController physics = new PantographPhysicsController(
+                context.world,
+                context.state.getValue(PantographBlock.DOUBLE),
+                context.state.getValue(PantographBlock.FACING),
+                context.localPos,
+                context.position,
+                false
+        );
+
+        if (context.blockEntityData.contains("physics", CompoundTag.TAG_COMPOUND)) {
+            physics.deserializeNBT(null, context.blockEntityData.getCompound("physics"));
+        }
+
+        physics.setExtended(!context.disabled);
+
+//        if (context.world.isClientSide && currentExtensionState == targetExtensionState && prevExtensionState != currentExtensionState)
+//            context.world.playLocalSound(context.position.x, context.position.y, context.position.z, SoundEvents.CHAIN_HIT, SoundSource.NEUTRAL, 0.1f, 1f, false);
 
 
 
         // Look for the connection point, and try to adjust the pantographs extension state to fit that point
 
-        if (context.world.isClientSide && !context.disabled) {
+        if (context.world.isClientSide) {
             double pantographX = context.state.getValue(PantographBlock.FACING).getAxisDirection() == Direction.AxisDirection.NEGATIVE ? 0.5 : -0.5;
             if (!isDouble)
                 pantographX /= 2;
@@ -107,6 +114,7 @@ public class PantographMovementBehaviour implements MovementBehaviour {
                 }
             }
 
+            float gravityCoefficient = (float) context.rotation.apply(new Vec3(0, -1, 0)).y;
             if (connectionPoint != null) {
                 float lo = 0;
                 float hi = 2.7f;
@@ -119,19 +127,19 @@ public class PantographMovementBehaviour implements MovementBehaviour {
                         lo = m1;
                 }
 //                context.world.addParticle(ParticleTypes.SCULK_CHARGE_POP, connectionPoint.x, connectionPoint.y, connectionPoint.z, 0, 0, 0);
-                float newExtensionState = (lo + hi) / 2;
-                if (targetExtensionState == currentExtensionState && targetExtensionState != 0)
-                    currentExtensionState = newExtensionState;
 
-                targetExtensionState = newExtensionState;
+                physics.updateExtension(
+                    1/20f,
+                    (float) (connectionPoint.y - context.position.add(context.rotation.apply(new Vec3(0, -0.5, 0))).y),
+                    0,
+                    gravityCoefficient,
+                    false // TODO: Handle recessive pantographs on contraptions
+                );
             } else {
-                targetExtensionState = 0f;
+                physics.updateExtension(1/20f, 100, 0, gravityCoefficient, false);
             }
 
             if (CEEConfigs.client().debugPantographRange.get() && (AnimationTickHolder.getTicks() % 3) == 0) {
-                Vec3 cp = getConnectorPos(currentExtensionState, context);
-                context.world.addParticle(ParticleTypes.ELECTRIC_SPARK, cp.x, cp.y, cp.z, 0, 0, 0);
-
                 Vec3 pp = new Vec3(axis == Direction.Axis.X ? pantographX : 0, halfPantoReach, axis == Direction.Axis.Z ? pantographX : 0);
                 for (float y = -halfPantoReach; y <= halfPantoReach; y += 2 / 16f) {
                     float v = (y + halfPantoReach) * 0.1f + 0.125f;
@@ -148,15 +156,13 @@ public class PantographMovementBehaviour implements MovementBehaviour {
 
                         }
                     }
+
                 }
             }
         }
 
+		context.blockEntityData.put("physics", physics.serializeNBT(null));
         context.data.putBoolean("Disabled", context.disabled);
-
-        context.data.putFloat("CurrentExtensionState", currentExtensionState);
-        context.blockEntityData.putFloat("ExtensionState", targetExtensionState);
-        context.data.putFloat("PrevExtensionState", prevExtensionState);
     }
 
     Vec3 getConnectorPos(float extensionState, MovementContext context) {
@@ -202,7 +208,22 @@ public class PantographMovementBehaviour implements MovementBehaviour {
     public void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld, ContraptionMatrices matrices, MultiBufferSource buffer) {
         PoseStack ms = matrices.getViewProjection();
         BlockState state = context.state;
-        float extensionState = Mth.lerp(AnimationTickHolder.getPartialTicks(), context.data.getFloat("PrevExtensionState"), context.data.getFloat("CurrentExtensionState"));
+
+        PantographPhysicsController physics = new PantographPhysicsController(
+                context.world,
+                context.state.getValue(PantographBlock.DOUBLE),
+                context.state.getValue(PantographBlock.FACING),
+                context.localPos,
+                context.position,
+                false
+        );
+
+        physics.deserializeNBT(null, context.blockEntityData.getCompound("physics"));
+
+        float extensionState = physics.interpolateRendering(AnimationTickHolder.getPartialTicks());
+
+        if (!(context.contraption.entity instanceof CarriageContraptionEntity e))
+            extensionState = physics.toRenderingState(physics.length);
 
         float yRot = state.getValue(FACING).toYRot();
         if (state.getValue(FACING).getAxis() == Direction.Axis.Z)
